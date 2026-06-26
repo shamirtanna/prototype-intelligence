@@ -1,4 +1,4 @@
 flask
 flask-cors
-anthropic
+anthropic>=0.45.0
 gunicorn
