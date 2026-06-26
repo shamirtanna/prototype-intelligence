@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import anthropic
@@ -7,7 +8,8 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+api_key = os.environ.get("ANTHROPIC_API_KEY")
+client = anthropic.Anthropic(api_key=api_key)
 
 V12_PROMPT = """You are a senior technical product advisor. You evaluate vibe-coded prototypes against their stated strategy.
 
@@ -115,18 +117,15 @@ def home():
 def analyze():
     data = request.get_json()
 
-    # Get inputs from the request
     strategy = data.get("strategy", "")
     codebase = data.get("codebase", "")
 
-    # Validate: codebase is required
     if not codebase or not codebase.strip():
-        return jsonify({"error": "Codebase is required"}), 400
+        return jsonify({"error": "Codebase is required. Paste your code in the left box."}), 400
 
-    # Call Claude
     try:
         msg = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             max_tokens=8192,
             messages=[
                 {
@@ -152,11 +151,10 @@ def analyze():
         parsed = json.loads(cleaned.strip())
         return jsonify(parsed)
 
-    except json.JSONDecodeError as e:
-        return jsonify({"error": "Failed to parse AI response", "raw": raw_text}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
+
