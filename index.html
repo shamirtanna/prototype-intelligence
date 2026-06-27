@@ -1,312 +1,229 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Prototype Intelligence</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 1200px; margin: 0 auto; padding: 40px; background: #f9fafb; }
-        h1 { margin-bottom: 4px; }
-        .subtitle { color: #6b7280; margin-bottom: 32px; }
-        .input-grid { display: flex; gap: 20px; margin-bottom: 20px; }
-        .input-grid > div { flex: 1; }
-        textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; resize: vertical; }
-        #codebase { font-family: monospace; }
-        label { font-weight: 600; display: block; margin-bottom: 6px; }
-        .btn { display: block; margin: 20px auto; padding: 12px 32px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-        .btn:hover { background: #1d4ed8; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .loading { text-align: center; padding: 20px; color: #6b7280; }
-        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #e5e7eb; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 12px; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .timer { font-size: 14px; color: #9ca3af; margin-top: 8px; }
-        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .assessment-card { border-left: 4px solid #2563eb; }
-        .built-card { border-left: 4px solid #16a34a; }
-        .not-built-card { border-left: 4px solid #dc2626; }
-        .cost-card { border-left: 4px solid #f59e0b; }
-        .counts { display: flex; gap: 32px; margin-bottom: 16px; }
-        .count-item { text-align: center; }
-        .count-number { font-size: 32px; font-weight: 700; }
-        .count-number.green { color: #16a34a; }
-        .count-number.red { color: #dc2626; }
-        .count-label { font-size: 12px; color: #6b7280; text-transform: uppercase; }
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
-        .badge-redo { background: #fef2f2; color: #dc2626; }
-        .badge-iterate { background: #fefce8; color: #a16207; }
-        .badge-get_feedback { background: #eff6ff; color: #2563eb; }
-        .badge-productionalize { background: #f0fdf4; color: #16a34a; }
-        .rec-detail { color: #374151; margin-top: 8px; font-size: 14px; }
-        .feature-item { padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px; }
-        .feature-item.from-vibe { background: #f5f3ff; border-left: 3px solid #a78bfa; }
-        .feature-name { font-weight: 600; margin-bottom: 4px; }
-        .feature-ref { font-size: 13px; color: #6b7280; font-style: italic; }
-        .feature-detail { font-size: 13px; color: #374151; margin-top: 4px; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
-        .tag-needs_pm_decision { background: #fff7ed; color: #c2410c; }
-        .tag-vibe_coding_limitation { background: #fef2f2; color: #dc2626; }
-        .tag-vibe_code_miss { background: #fefce8; color: #a16207; }
-        .tag-separate_system { background: #f3f4f6; color: #4b5563; }
-        .tag-vibe-addition { background: #f5f3ff; color: #7c3aed; }
-        .tag-two-way { background: #ecfdf5; color: #059669; }
-        .tag-one-way { background: #fef2f2; color: #dc2626; }
-        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
-        .section-title.green { color: #16a34a; }
-        .section-title.red { color: #dc2626; }
-        .section-title.amber { color: #f59e0b; }
-        .section-divider { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
-        #results { display: none; }
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        .input-section { display: flex; gap: 20px; margin-bottom: 20px; }
+        .input-section textarea { width: 50%; height: 300px; padding: 10px; font-family: monospace; font-size: 12px; }
+        button { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        .status { margin: 10px 0; color: #666; font-style: italic; }
+        .error { color: #dc2626; font-weight: bold; }
 
-        /* Accordion styles */
-        .stage-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #f9fafb; border-radius: 8px; cursor: pointer; margin-bottom: 4px; border: 1px solid #e5e7eb; }
-        .stage-header:hover { background: #f3f4f6; }
-        .stage-name { font-weight: 600; font-size: 15px; }
-        .stage-effort { font-size: 13px; color: #6b7280; background: #e5e7eb; padding: 2px 10px; border-radius: 12px; }
-        .stage-arrow { font-size: 12px; color: #9ca3af; transition: transform 0.2s; }
-        .stage-arrow.open { transform: rotate(90deg); }
-        .stage-items { display: none; padding: 8px 0 16px 0; }
-        .stage-items.open { display: block; }
-        .stage-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 16px; border-bottom: 1px solid #f3f4f6; }
-        .stage-item:last-child { border-bottom: none; }
-        .stage-item-left { flex: 1; }
-        .stage-item-feature { font-weight: 500; font-size: 14px; }
-        .stage-item-tradeoff { font-size: 13px; color: #6b7280; margin-top: 4px; }
-        .stage-item-effort { font-size: 12px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; white-space: nowrap; margin-left: 12px; }
+        /* Report Styling */
+        .report { margin-top: 30px; }
+        .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .card h2 { margin-top: 0; color: #1e293b; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-right: 6px; }
+        .badge-built { background: #dcfce7; color: #166534; }
+        .badge-missed { background: #fee2e2; color: #991b1b; }
+        .badge-redo { background: #fee2e2; color: #991b1b; }
+        .badge-iterate { background: #fef9c3; color: #854d0e; }
+        .badge-get_feedback { background: #dbeafe; color: #1e40af; }
+        .badge-productionalize { background: #dcfce7; color: #166534; }
+        .feature-item { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .feature-item:last-child { border-bottom: none; }
+        .feature-name { font-weight: bold; }
+        .feature-detail { color: #64748b; font-size: 14px; margin-top: 4px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 4px; }
+        .tag-pm { background: #ede9fe; color: #5b21b6; }
+        .tag-vibe { background: #fce7f3; color: #9d174d; }
+        .tag-limitation { background: #f1f5f9; color: #475569; }
+        .tag-from-doc { background: #dbeafe; color: #1e40af; }
+        .tag-added { background: #fef3c7; color: #92400e; }
+
+        /* Accordion for cost stages */
+        .accordion { border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 8px; }
+        .accordion-header { padding: 12px 16px; cursor: pointer; font-weight: bold; background: #f8fafc; }
+        .accordion-header:hover { background: #f1f5f9; }
+        .accordion-content { padding: 0 16px 12px; display: none; }
+        .accordion.open .accordion-content { display: block; }
+        .door-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+        .door-one-way { background: #fee2e2; color: #991b1b; }
+        .door-two-way { background: #dcfce7; color: #166534; }
+
+        /* Analyzing indicator */
+        .analyzing-dot { display: inline-block; width: 8px; height: 8px; background: #2563eb; border-radius: 50%; animation: pulse 1s infinite; margin-left: 8px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
     <h1>Prototype Intelligence</h1>
-    <p class="subtitle">Analyze your vibe-coded prototype against your strategy</p>
+    <p>Evaluate your vibe-coded prototype against your strategy</p>
 
-    <div class="input-grid">
-        <div>
-            <label>Codebase</label>
-            <textarea id="codebase" rows="15" placeholder="Paste your codebase here..."></textarea>
-        </div>
-        <div>
-            <label>Strategy Input</label>
-            <textarea id="strategy" rows="15" placeholder="Paste your strategy doc, vibe-coding prompt, or leave empty..."></textarea>
-            <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">Full strategy doc, short prompt, or leave empty — all work</p>
-        </div>
+    <div class="input-section">
+        <textarea id="codebase" placeholder="Paste your codebase here..."></textarea>
+        <textarea id="strategy" placeholder="Paste your strategy doc here (or leave empty)..."></textarea>
     </div>
 
-    <button id="analyzeBtn" class="btn">Analyze</button>
-
-    <div id="loading" class="loading" style="display: none;">
-        <p style="font-size: 18px;"><span class="spinner"></span>Analyzing your prototype...</p>
-        <p>This takes 30-60 seconds while Claude reviews your code</p>
-        <p class="timer" id="timer"></p>
-    </div>
-
-    <div id="error" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-top: 20px;">
-        <p style="color: #dc2626; font-weight: 600;">Analysis failed</p>
-        <p id="errorMsg" style="color: #dc2626; font-size: 14px;"></p>
-    </div>
-
-    <div id="results">
-        <!-- Assessment Card -->
-        <div class="card assessment-card">
-            <div class="counts">
-                <div class="count-item">
-                    <div class="count-number green" id="builtCount"></div>
-                    <div class="count-label">Features from doc/prompt built</div>
-                </div>
-                <div class="count-item">
-                    <div class="count-number red" id="missedCount"></div>
-                    <div class="count-label">Features from doc/prompt not built</div>
-                </div>
-            </div>
-            <div>
-                <span id="recBadge" class="badge"></span>
-                <p class="rec-detail" id="recDetail"></p>
-            </div>
-        </div>
-
-        <!-- What Was Built -->
-        <div class="card built-card">
-            <div class="section-title green">What Was Built</div>
-            <div id="builtList"></div>
-        </div>
-
-        <!-- What Wasn't Built -->
-        <div class="card not-built-card">
-            <div class="section-title red">What Wasn't Built</div>
-            <div id="notBuiltList"></div>
-        </div>
-
-        <!-- Cost to Next Stage -->
-        <div class="card cost-card">
-            <div class="section-title amber">Cost to Next Stage</div>
-            <div id="costStages"></div>
-        </div>
-    </div>
+    <button id="analyzeBtn" onclick="analyze()">Analyze</button>
+    <div id="status" class="status"></div>
+    <div id="report" class="report"></div>
 
     <script>
-        document.getElementById('analyzeBtn').addEventListener('click', async function() {
-            const codebase = document.getElementById('codebase').value;
-            const strategy = document.getElementById('strategy').value;
+        async function analyze() {
+            const codebase = document.getElementById("codebase").value;
+            const strategy = document.getElementById("strategy").value;
+            const status = document.getElementById("status");
+            const report = document.getElementById("report");
+            const btn = document.getElementById("analyzeBtn");
 
             if (!codebase.trim()) {
-                alert('Please paste your codebase');
+                status.innerHTML = '<span class="error">Please paste your codebase in the left box.</span>';
                 return;
             }
 
-            // Show loading, hide results and error
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('analyzeBtn').disabled = true;
+            // Disable button, show simple analyzing message
+            btn.disabled = true;
+            status.innerHTML = 'Analyzing your prototype<span class="analyzing-dot"></span>';
+            report.innerHTML = "";
 
-            // Start timer
-            let seconds = 0;
-            const timerEl = document.getElementById('timer');
-            const timerInterval = setInterval(() => {
-                seconds++;
-                timerEl.textContent = seconds + 's elapsed';
-            }, 1000);
+            let fullText = "";
 
             try {
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const response = await fetch("/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ codebase, strategy })
                 });
 
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
+                if (!response.ok) {
+                    const err = await response.json();
+                    status.innerHTML = '<span class="error">Analysis failed: ' + (err.error || "Unknown error") + '</span>';
+                    btn.disabled = false;
+                    return;
                 }
 
-                renderResults(data);
-            } catch (err) {
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('errorMsg').textContent = err.message;
-            } finally {
-                clearInterval(timerInterval);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('analyzeBtn').disabled = false;
-            }
-        });
+                // Read the stream silently — user just sees "Analyzing..."
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
 
-        function renderResults(data) {
-            document.getElementById('results').style.display = 'block';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    fullText += decoder.decode(value, { stream: true });
+                }
 
-            // Assessment
-            document.getElementById('builtCount').textContent = data.assessment.built_count;
-            document.getElementById('missedCount').textContent = data.assessment.missed_count;
+                // Stream complete — show results
+                status.innerHTML = "";
 
-            const badge = document.getElementById('recBadge');
-            const category = data.assessment.recommendation.category;
-            badge.textContent = category.replace(/_/g, ' ');
-            badge.className = 'badge badge-' + category;
+                // Clean up markdown wrappers if present
+                let cleaned = fullText.trim();
+                if (cleaned.startsWith("```")) {
+                    cleaned = cleaned.split("\n").slice(1).join("\n");
+                }
+                if (cleaned.endsWith("```")) {
+                    cleaned = cleaned.slice(0, cleaned.lastIndexOf("```"));
+                }
 
-            document.getElementById('recDetail').textContent = data.assessment.recommendation.detail;
+                const data = JSON.parse(cleaned.trim());
 
-            // What Was Built — separate from_doc and vibe additions
-            const builtList = document.getElementById('builtList');
-            builtList.innerHTML = '';
-            const builtItems = data.what_was_built.items || data.what_was_built;
-            const builtFromDoc = builtItems.filter(item => item.from_doc !== false);
-            const builtVibeAdded = builtItems.filter(item => item.from_doc === false);
+                if (data.error) {
+                    status.innerHTML = '<span class="error">Analysis failed: ' + data.error + '</span>';
+                    btn.disabled = false;
+                    return;
+                }
 
-            builtFromDoc.forEach(item => {
-                builtList.innerHTML += '<div class="feature-item">'
-                    + '<div class="feature-name">' + item.feature + '</div>'
-                    + '<div class="feature-ref">📄 Reference: ' + item.doc_or_prompt_reference + '</div>'
-                    + '<div class="feature-detail">📍 Where in product: ' + item.where_in_product + '</div>'
-                    + '</div>';
-            });
+                // Render the report
+                renderReport(data);
 
-            if (builtVibeAdded.length > 0) {
-                builtList.innerHTML += '<div class="section-divider">Also built (not in doc/prompt)</div>';
-                builtVibeAdded.forEach(item => {
-                    builtList.innerHTML += '<div class="feature-item from-vibe">'
-                        + '<div class="feature-name">' + item.feature + '<span class="tag tag-vibe-addition">vibe code addition</span></div>'
-                        + '<div class="feature-detail">📍 Where in product: ' + item.where_in_product + '</div>'
-                        + '</div>';
-                });
+            } catch (e) {
+                status.innerHTML = '<span class="error">Something went wrong. Please try again.</span>';
             }
 
-            // What Wasn't Built — separate from_doc and others
-            const notBuiltList = document.getElementById('notBuiltList');
-            notBuiltList.innerHTML = '';
-            const notBuiltItems = data.what_wasnt_built.items || data.what_wasnt_built;
-            const notBuiltFromDoc = notBuiltItems.filter(item => item.from_doc !== false);
-            const notBuiltOther = notBuiltItems.filter(item => item.from_doc === false);
-
-            notBuiltFromDoc.forEach(item => {
-                notBuiltList.innerHTML += '<div class="feature-item">'
-                    + '<div class="feature-name">' + item.feature
-                    + '<span class="tag tag-' + item.why_not_built + '">' + item.why_not_built.replace(/_/g, ' ') + '</span>'
-                    + '</div>'
-                    + '<div class="feature-ref">📄 Reference: ' + item.doc_or_prompt_reference + '</div>'
-                    + '<div class="feature-detail">💡 What to do: ' + item.what_to_do + '</div>'
-                    + '</div>';
-            });
-
-            if (notBuiltOther.length > 0) {
-                notBuiltList.innerHTML += '<div class="section-divider">Other gaps identified</div>';
-                notBuiltOther.forEach(item => {
-                    notBuiltList.innerHTML += '<div class="feature-item">'
-                        + '<div class="feature-name">' + item.feature
-                        + '<span class="tag tag-' + item.why_not_built + '">' + item.why_not_built.replace(/_/g, ' ') + '</span>'
-                        + '</div>'
-                        + '<div class="feature-detail">💡 What to do: ' + item.what_to_do + '</div>'
-                        + '</div>';
-                });
-            }
-
-            // Cost to Next Stage
-            const costStages = document.getElementById('costStages');
-            costStages.innerHTML = '';
-            const stages = data.cost_to_next_stage.stages || data.cost_to_next_stage;
-            stages.forEach((stage, index) => {
-                const stageId = 'stage-' + index;
-                const stageName = stage.stage.replace(/_/g, ' ');
-
-                // Stage header (clickable)
-                costStages.innerHTML += '<div class="stage-header" onclick="toggleStage(\'' + stageId + '\')">'
-                    + '<div><span class="stage-name">' + stageName + '</span></div>'
-                    + '<div style="display: flex; align-items: center; gap: 12px;">'
-                    + '<span class="stage-effort">' + stage.effort + '</span>'
-                    + '<span class="stage-arrow" id="arrow-' + stageId + '">▶</span>'
-                    + '</div>'
-                    + '</div>';
-
-                // Stage items (hidden by default)
-                let itemsHtml = '<div class="stage-items" id="' + stageId + '">';
-                const stageItems = stage.items || [];
-                stageItems.forEach(item => {
-                    let doorTag = '';
-                    if (item.door_type === 'two_way_door') {
-                        doorTag = '<span class="tag tag-two-way">🚪 two-way door</span>';
-                    } else if (item.door_type === 'one_way_door') {
-                        doorTag = '<span class="tag tag-one-way">🔒 one-way door</span>';
-                    }
-
-                    itemsHtml += '<div class="stage-item">'
-                        + '<div class="stage-item-left">'
-                        + '<div class="stage-item-feature">' + item.feature_or_gap + doorTag + '</div>'
-                        + (item.tradeoff_or_simpler_option ? '<div class="stage-item-tradeoff">💡 ' + item.tradeoff_or_simpler_option + '</div>' : '')
-                        + '</div>'
-                        + '<span class="stage-item-effort">' + item.effort + '</span>'
-                        + '</div>';
-                });
-                itemsHtml += '</div>';
-                costStages.innerHTML += itemsHtml;
-            });
+            btn.disabled = false;
         }
 
-        function toggleStage(stageId) {
-            const items = document.getElementById(stageId);
-            const arrow = document.getElementById('arrow-' + stageId);
-            if (items.classList.contains('open')) {
-                items.classList.remove('open');
-                arrow.classList.remove('open');
-            } else {
-                items.classList.add('open');
-                arrow.classList.add('open');
+        function renderReport(data) {
+            const report = document.getElementById("report");
+            let html = "";
+
+            // Assessment card
+            const rec = data.assessment.recommendation;
+            html += '<div class="card">';
+            html += '<h2>Assessment</h2>';
+            html += '<span class="badge badge-built">' + data.assessment.built_count + ' features from doc/prompt built</span>';
+            html += '<span class="badge badge-missed">' + data.assessment.missed_count + ' features from doc/prompt not built</span>';
+            html += '<br><br>';
+            html += '<span class="badge badge-' + rec.category + '">' + rec.category.replace("_", " ") + '</span> ';
+            html += rec.detail;
+            html += '</div>';
+
+            // What was built
+            html += '<div class="card">';
+            html += '<h2>What Was Built</h2>';
+            if (data.what_was_built && data.what_was_built.length > 0) {
+                data.what_was_built.forEach(function(item) {
+                    html += '<div class="feature-item">';
+                    html += '<div class="feature-name">' + item.feature + '</div>';
+                    html += '<div class="feature-detail">' + (item.where_in_product || "") + '</div>';
+                    if (item.doc_or_prompt_reference) {
+                        html += '<div class="feature-detail"><em>"' + item.doc_or_prompt_reference + '"</em></div>';
+                    }
+                    html += '<span class="tag ' + (item.from_doc ? 'tag-from-doc' : 'tag-added') + '">' + (item.from_doc ? 'from doc' : 'vibe code addition') + '</span>';
+                    html += '</div>';
+                });
             }
+            html += '</div>';
+
+            // What wasn't built
+            html += '<div class="card">';
+            html += '<h2>What Wasn\'t Built</h2>';
+            if (data.what_wasnt_built && data.what_wasnt_built.length > 0) {
+                data.what_wasnt_built.forEach(function(item) {
+                    html += '<div class="feature-item">';
+                    html += '<div class="feature-name">' + item.feature + '</div>';
+                    html += '<div class="feature-detail">' + (item.what_to_do || "") + '</div>';
+                    if (item.doc_or_prompt_reference) {
+                        html += '<div class="feature-detail"><em>"' + item.doc_or_prompt_reference + '"</em></div>';
+                    }
+                    const tagClass = item.why_not_built === "needs_pm_decision" ? "tag-pm" : item.why_not_built === "vibe_code_miss" ? "tag-vibe" : "tag-limitation";
+                    const tagLabel = item.why_not_built === "needs_pm_decision" ? "needs PM decision" : item.why_not_built === "vibe_code_miss" ? "vibe code miss" : "vibe coding limitation";
+                    html += '<span class="tag ' + tagClass + '">' + tagLabel + '</span> ';
+                    html += '<span class="tag ' + (item.from_doc ? 'tag-from-doc' : 'tag-added') + '">' + (item.from_doc ? 'from doc' : 'surfaced by analysis') + '</span>';
+                    html += '</div>';
+                });
+            }
+            html += '</div>';
+
+            // Cost to next stage (accordion)
+            if (data.cost_to_next_stage && data.cost_to_next_stage.stages) {
+                html += '<div class="card">';
+                html += '<h2>Cost to Next Stage</h2>';
+                data.cost_to_next_stage.stages.forEach(function(stage) {
+                    html += '<div class="accordion">';
+                    html += '<div class="accordion-header" onclick="this.parentElement.classList.toggle(\'open\')">';
+                    html += stage.stage.replace(/_/g, " ") + ' — ' + stage.effort;
+                    html += '</div>';
+                    html += '<div class="accordion-content">';
+                    if (stage.items) {
+                        stage.items.forEach(function(item) {
+                            html += '<div class="feature-item">';
+                            html += '<div class="feature-name">' + item.feature_or_gap + '</div>';
+                            html += '<div class="feature-detail">Effort: ' + item.effort + '</div>';
+                            if (item.tradeoff_or_simpler_option) {
+                                html += '<div class="feature-detail">Tradeoff: ' + item.tradeoff_or_simpler_option + '</div>';
+                            }
+                            if (item.door_type && item.door_type !== "null") {
+                                const doorClass = item.door_type === "one_way_door" ? "door-one-way" : "door-two-way";
+                                const doorLabel = item.door_type === "one_way_door" ? "one-way door (decide carefully)" : "two-way door (decide fast)";
+                                html += ' <span class="door-tag ' + doorClass + '">' + doorLabel + '</span>';
+                            }
+                            html += '</div>';
+                        });
+                    }
+                    html += '</div></div>';
+                });
+                html += '</div>';
+            }
+
+            report.innerHTML = html;
         }
     </script>
 </body>
 </html>
+

@@ -1,5 +1,5 @@
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 import anthropic
 import os
@@ -8,6 +8,7 @@ import json
 app = Flask(__name__)
 CORS(app)
 
+# API key — reads from environment variable (Render), or hardcode for local testing
 api_key = os.environ.get("ANTHROPIC_API_KEY")
 client = anthropic.Anthropic(api_key=api_key)
 
@@ -123,36 +124,44 @@ def analyze():
     if not codebase or not codebase.strip():
         return jsonify({"error": "Codebase is required. Paste your code in the left box."}), 400
 
-    try:
-        msg = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=8192,
-            messages=[
-                {
-                    "role": "user",
-                    "content": V12_PROMPT
-                    + "\n\n---\n\nCODEBASE:\n"
-                    + codebase
-                    + "\n\n---\n\nSTRATEGY INPUT:\n"
-                    + strategy,
-                }
-            ],
-        )
+    if not api_key:
+        return jsonify({"error": "API key not configured. Contact the app owner."}), 500
 
-        raw_text = msg.content[0].text
+    total_chars = len(strategy) + len(codebase)
+    if total_chars > 100000:
+        return jsonify({"error": f"Input too large ({total_chars} characters). Keep under 100K."}), 400
 
-        # Parse JSON response
-        cleaned = raw_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-        if cleaned.endswith("```"):
-            cleaned = cleaned.rsplit("```", 1)[0]
+    def generate():
+        try:
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=8192,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": V12_PROMPT
+                        + "\n\n---\n\nCODEBASE:\n"
+                        + codebase
+                        + "\n\n---\n\nSTRATEGY INPUT:\n"
+                        + strategy,
+                    }
+                ],
+            ) as stream:
+                for text in stream.text_stream:
+                    yield text
+        except anthropic.AuthenticationError:
+            yield '{"error": "API key is invalid or expired."}'
+        except anthropic.NotFoundError:
+            yield '{"error": "Model not found. Check model name."}'
+        except anthropic.RateLimitError:
+            yield '{"error": "Rate limit hit. Wait 60 seconds."}'
+        except Exception as e:
+            yield f'{{"error": "Unexpected error: {str(e)}"}}'
 
-        parsed = json.loads(cleaned.strip())
-        return jsonify(parsed)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return Response(generate(), mimetype="text/plain", headers={
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no"
+    })
 
 
 if __name__ == "__main__":
