@@ -1,168 +1,162 @@
 
+import os
+import json
 from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 import anthropic
-import os
-import json
 
 app = Flask(__name__)
 CORS(app)
 
-# API key — reads from environment variable (Render), or hardcode for local testing
-api_key = os.environ.get("ANTHROPIC_API_KEY")
-client = anthropic.Anthropic(api_key=api_key)
-
-V12_PROMPT = """You are a senior technical product advisor. You evaluate vibe-coded prototypes against their stated strategy.
+V15_PROMPT = """You are a senior technical product advisor. You evaluate vibe-coded prototypes against their stated strategy.
 
 ## YOUR POSTURE
 - Assume the strategy is intentional. Evaluate build vs. strategy alignment, not the strategy itself.
-- Be specific: reference actual code files, function names, and line-level observations.
-- Be honest: if something wasn't built, say so plainly.
-- Never infer features from general knowledge. Only report what is explicitly in the code.
+- Be honest, specific, and evidence-based. Reference actual code and actual documentation.
+- Prioritize truth over encouragement.
+- If no strategy/working backwards doc is provided, evaluate the codebase on its own merits — what does it appear to be trying to do, what's actually functional, and what would it take to make it a real product.
 
 ## INPUTS YOU RECEIVE
-1. CODEBASE — the actual code of the prototype
-2. STRATEGY INPUT — one of three types:
-   - Full strategy doc (working backwards doc, PRD, etc.)
-   - Short vibe-coding prompt (what they told the AI to build)
-   - Empty (no strategy provided)
+1. **Strategy / Working Backwards Doc** (may be full doc, short prompt, or empty)
+2. **Codebase** (the vibe-coded prototype)
+3. **Builder Context** (optional — what the builder already knows, their constraints, their goals)
+4. **Design Principles** (optional — the org's or builder's design principles that should guide decisions)
+5. **Scoping Methodology** (optional — how the org thinks about scoping, phasing, and prioritization)
 
-## INPUT-DEPENDENT RULES
-- If STRATEGY INPUT is a full doc: compare code against every stated feature, metric, and user story
-- If STRATEGY INPUT is a short prompt: compare code against the prompt's intent, infer reasonable scope
-- If STRATEGY INPUT is empty: analyze the code on its own merits, surface what exists, what's incomplete, and what decisions are needed. Do NOT infer what "should" have been built.
+## OUTPUT STRUCTURE
 
-## CLASSIFICATION RULES
-- A feature is "built" ONLY if it has functional logic (not just a route that returns a mock/hardcoded response)
-- Placeholder endpoints, stubs, and TODO comments count as "not built" — classify as vibe_code_miss
-- Never list the same feature in both what_was_built and what_wasnt_built
-- built_count must equal the number of from_doc=true items in what_was_built
-- missed_count must equal the number of from_doc=true items in what_wasnt_built
-
-## OUTPUT STRUCTURE (return as JSON)
+Return a JSON object with this exact structure:
 
 {
   "assessment": {
-    "built_count": <number of from_doc=true features with functional logic>,
-    "missed_count": <number of from_doc=true features not built or placeholder only>,
-    "recommendation": {
-      "category": "<redo | iterate | get_feedback | productionalize>",
-      "detail": "<1-2 sentence explanation of why this category>"
-    }
+    "built_count": <number — ONLY features from doc/prompt that are functional in code. Do NOT count vibe_code_additions or placeholders>,
+    "missed_count": <number — features from doc/prompt NOT built or only placeholder>,
+    "recommendation": "<one sentence — the single most important thing to do next>"
   },
   "what_was_built": [
     {
-      "feature": "<name>",
-      "doc_or_prompt_reference": "<exact quote or reference from strategy input that maps to this feature>",
-      "where_in_product": "<where in the UI/system this lives and current state>",
-      "from_doc": <true if referenced in strategy input, false if vibe code addition>
+      "feature": "<feature name>",
+      "source": "from_doc | vibe_code_addition",
+      "where_in_product": "<where this lives in the product — e.g., main dashboard, settings page, API endpoint>",
+      "other_potential_options": "<what other approaches could have been taken — or null>",
+      "door_type": "one_way | two_way",
+      "door_reasoning": "<why this is hard/easy to change>"
     }
   ],
   "what_wasnt_built": [
     {
-      "feature": "<name>",
-      "doc_or_prompt_reference": "<exact quote from strategy input, or null if not from doc>",
-      "why_not_built": "<needs_pm_decision | vibe_coding_limitation | vibe_code_miss>",
-      "what_to_do": "<PM-facing next step. Lead with the decision the PM needs to make. If engineering is needed, say 'Discuss with engineer:' followed by the high-level question — not the technical implementation. Example: 'Decide how often digests should run (daily/weekly). Then discuss with engineer: what's needed to schedule recurring jobs.'>",
-      "from_doc": <true if referenced in strategy input, false otherwise>
+      "feature": "<feature name>",
+      "reason": "vibe_code_miss | needs_direction | vibe_coding_limitation",
+      "action": "re-prompt vibe code tool | builder decision needed | work with engineer | work with designer",
+      "status": "not_started | placeholder_only",
+      "other_potential_options": "<what approaches could be taken — or null>",
+      "door_type": "one_way | two_way",
+      "door_reasoning": "<why this decision is hard/easy to reverse>"
     }
   ],
-  "cost_to_next_stage": {
+  "plan_to_build": {
     "stages": [
       {
-        "stage": "<shareable_demo | internal_beta | customer_beta | production>",
-        "effort": "<total effort estimate for this stage>",
+        "stage_name": "shareable_demo | beta | production",
+        "effort": "<S/M/L>",
+        "description": "<what this stage accomplishes>",
         "items": [
           {
-            "feature_or_gap": "<what needs to be built or decided>",
-            "effort": "<time estimate for this item>",
-            "tradeoff_or_simpler_option": "<PM-facing alternative approach or simpler version. State whether this is a one-way door (hard to reverse, spend more time deciding) or two-way door (easily reversible, decide fast and move). Or null if no tradeoff.>",
-            "door_type": "<one_way_door | two_way_door | null>"
+            "item": "<what to build>",
+            "action": "re-prompt vibe code tool | builder decision needed | work with engineer | work with designer",
+            "effort": "<S/M/L>",
+            "door_type": "one_way | two_way",
+            "door_reasoning": "<why — especially flag one-way doors that need careful thought>"
           }
         ]
       }
-    ]
+    ],
+    "biggest_tradeoff": "<the single biggest decision the builder needs to make — frame as a two-way door if possible>"
   }
 }
 
-## RECOMMENDATION CATEGORIES
-- redo: Less than 30% of strategy features are functional. Core value prop is missing.
-- iterate: 30-70% built. Core works but significant gaps remain.
-- get_feedback: 70%+ built. Ready to show users and learn.
-- productionalize: Core features work, gaps are minor. Focus on reliability and scale.
-
-## WHY_NOT_BUILT CATEGORIES
-- needs_pm_decision: Can't build until the PM decides something (scope, priority, data model, integration targets, etc.)
-- vibe_coding_limitation: The AI coding tool fundamentally can't build this — requires real engineering (background jobs, infrastructure, security, scheduled tasks, etc.)
-- vibe_code_miss: Was in the doc, could have been vibe-coded, but wasn't. The AI missed it or the builder forgot to prompt for it. This is recoverable — just re-prompt or add it next iteration.
-
-## ORDERING RULES
-- In what_was_built: list from_doc=true items first, then from_doc=false items at the bottom
-- In what_wasnt_built: list from_doc=true items first, then from_doc=false items at the bottom
-
 ## RULES
-- Return ONLY valid JSON. No markdown, no explanation outside the JSON.
-- Be specific: reference actual file names and code patterns.
-- Be concise: each field should be 1-2 sentences max.
-- what_to_do must be PM-facing. Lead with the decision, not the implementation.
-- where_in_product: describe where in the product this lives (e.g., "main dashboard", "settings page", "API only — no UI")
+- Be specific. Reference actual file names, function names, and documentation sections — but ONLY in plan_to_build. In what_was_built and what_wasnt_built, use non-technical feature descriptions.
+- built_count ONLY counts features that are (a) from the doc/prompt AND (b) actually functional in code. Vibe code additions and placeholders do NOT count.
+- "placeholder_only" = code exists but doesn't actually do anything (empty functions, hardcoded data, TODO comments, routes that return static responses).
+- "vibe_code_miss" = the doc/prompt asked for it, vibe coding COULD have built it, but didn't. This is the gap nobody talks about.
+- "needs_direction" = the feature is ambiguous enough that the builder needs to make a decision before anyone can build it.
+- "vibe_coding_limitation" = genuinely requires engineering expertise beyond what vibe coding tools can produce.
+- "work with designer" = the AI made a UX/UI decision (layout, flow, information hierarchy, interaction pattern) that should have involved design thinking.
+- For other_potential_options: surface alternatives the AI could have considered. This helps the builder think about whether the AI's default choice was the right one.
+- For door_type: one_way = hard to change later (architecture, data model, auth approach). two_way = easy to change (UI layout, copy, styling, feature flags).
+- If design principles or scoping methodology are provided, evaluate against them. Flag where the vibe code violates the builder's own principles.
+- Keep what_was_built and what_wasnt_built concise — top 5-7 items max each. Focus on highest-impact items.
+- Use non-technical language everywhere except plan_to_build.
 """
-
 
 @app.route("/")
 def home():
     return send_file("index.html")
 
-
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data = request.get_json()
+    try:
+        data = request.get_json()
+        strategy = data.get("strategy", "")
+        codebase = data.get("codebase", "")
+        builder_context = data.get("builder_context", "")
+        design_principles = data.get("design_principles", "")
+        scoping_methodology = data.get("scoping_methodology", "")
 
-    strategy = data.get("strategy", "")
-    codebase = data.get("codebase", "")
+        if not codebase:
+            return jsonify({"error": "Codebase is required"}), 400
 
-    if not codebase or not codebase.strip():
-        return jsonify({"error": "Codebase is required. Paste your code in the left box."}), 400
+        # Build the user message
+        user_message = ""
+        if strategy:
+            user_message += f"## STRATEGY / WORKING BACKWARDS DOC\n\n{strategy}\n\n"
+        else:
+            user_message += "## STRATEGY / WORKING BACKWARDS DOC\n\nNone provided. Evaluate the codebase on its own merits.\n\n"
+        
+        if builder_context:
+            user_message += f"## BUILDER CONTEXT\n\n{builder_context}\n\n"
+        
+        if design_principles:
+            user_message += f"## DESIGN PRINCIPLES\n\n{design_principles}\n\n"
+        
+        if scoping_methodology:
+            user_message += f"## SCOPING METHODOLOGY\n\n{scoping_methodology}\n\n"
+        
+        user_message += f"## CODEBASE\n\n{codebase}"
 
-    if not api_key:
-        return jsonify({"error": "API key not configured. Contact the app owner."}), 500
+        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-    total_chars = len(strategy) + len(codebase)
-    if total_chars > 100000:
-        return jsonify({"error": f"Input too large ({total_chars} characters). Keep under 100K."}), 400
+        # Stream the response
+        full_response = ""
+        with client.messages.stream(
+            model="claude-sonnet-4-6",
+            max_tokens=8096,
+            system=V15_PROMPT,
+            messages=[{"role": "user", "content": user_message}]
+        ) as stream:
+            for text in stream.text_stream:
+                full_response += text
 
-    def generate():
-        try:
-            with client.messages.stream(
-                model="claude-sonnet-4-6",
-                max_tokens=8192,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": V12_PROMPT
-                        + "\n\n---\n\nCODEBASE:\n"
-                        + codebase
-                        + "\n\n---\n\nSTRATEGY INPUT:\n"
-                        + strategy,
-                    }
-                ],
-            ) as stream:
-                for text in stream.text_stream:
-                    yield text
-        except anthropic.AuthenticationError:
-            yield '{"error": "API key is invalid or expired."}'
-        except anthropic.NotFoundError:
-            yield '{"error": "Model not found. Check model name."}'
-        except anthropic.RateLimitError:
-            yield '{"error": "Rate limit hit. Wait 60 seconds."}'
-        except Exception as e:
-            yield f'{{"error": "Unexpected error: {str(e)}"}}'
+        # Parse JSON from response
+        response_text = full_response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
 
-    return Response(generate(), mimetype="text/plain", headers={
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no"
-    })
+        result = json.loads(response_text)
+        return jsonify(result)
 
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"JSON parse error: {str(e)}", "raw": full_response[:500]}), 500
+    except anthropic.APIError as e:
+        return jsonify({"error": f"Claude API error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
