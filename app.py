@@ -19,9 +19,7 @@ V15_PROMPT = """You are a senior technical product advisor. You evaluate vibe-co
 ## INPUTS YOU RECEIVE
 1. **Strategy / Working Backwards Doc** (may be full doc, short prompt, or empty)
 2. **Codebase** (the vibe-coded prototype)
-3. **Builder Context** (optional — what the builder already knows, their constraints, their goals)
-4. **Design Principles** (optional — the org's or builder's design principles that should guide decisions)
-5. **Scoping Methodology** (optional — how the org thinks about scoping, phasing, and prioritization)
+3. **Design Principles** (optional — the org's or builder's design principles that should guide decisions)
 
 ## OUTPUT STRUCTURE
 
@@ -58,13 +56,13 @@ Return a JSON object with this exact structure:
     "stages": [
       {
         "stage_name": "shareable_demo | beta | production",
-        "effort": "<S/M/L>",
+        "effort": "<time range — e.g., '2-4 hours', '1-2 days', '1-2 weeks'. Assume one experienced developer.>",
         "description": "<what this stage accomplishes>",
         "items": [
           {
             "item": "<what to build>",
             "action": "re-prompt vibe code tool | builder decision needed | work with engineer | work with designer",
-            "effort": "<S/M/L>",
+            "effort": "<time range — e.g., '2-4 hours', '1-2 days', '1-2 weeks'>",
             "door_type": "one_way | two_way",
             "door_reasoning": "<why — especially flag one-way doors that need careful thought>"
           }
@@ -85,7 +83,7 @@ Return a JSON object with this exact structure:
 - "work with designer" = the AI made a UX/UI decision (layout, flow, information hierarchy, interaction pattern) that should have involved design thinking.
 - For other_potential_options: surface alternatives the AI could have considered. This helps the builder think about whether the AI's default choice was the right one.
 - For door_type: one_way = hard to change later (architecture, data model, auth approach). two_way = easy to change (UI layout, copy, styling, feature flags).
-- If design principles or scoping methodology are provided, evaluate against them. Flag where the vibe code violates the builder's own principles.
+- If design principles are provided, evaluate against them. Flag where the vibe code violates the builder's own principles.
 - Keep what_was_built and what_wasnt_built concise — top 5-7 items max each. Focus on highest-impact items.
 - Use non-technical language everywhere except plan_to_build.
 """
@@ -100,9 +98,7 @@ def analyze():
         data = request.get_json()
         strategy = data.get("strategy", "")
         codebase = data.get("codebase", "")
-        builder_context = data.get("builder_context", "")
         design_principles = data.get("design_principles", "")
-        scoping_methodology = data.get("scoping_methodology", "")
 
         if not codebase:
             return jsonify({"error": "Codebase is required"}), 400
@@ -114,14 +110,8 @@ def analyze():
         else:
             user_message += "## STRATEGY / WORKING BACKWARDS DOC\n\nNone provided. Evaluate the codebase on its own merits.\n\n"
         
-        if builder_context:
-            user_message += f"## BUILDER CONTEXT\n\n{builder_context}\n\n"
-        
         if design_principles:
             user_message += f"## DESIGN PRINCIPLES\n\n{design_principles}\n\n"
-        
-        if scoping_methodology:
-            user_message += f"## SCOPING METHODOLOGY\n\n{scoping_methodology}\n\n"
         
         user_message += f"## CODEBASE\n\n{codebase}"
 
