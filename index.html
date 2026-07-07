@@ -4,209 +4,348 @@
 <head>
     <title>Vibe Code Intelligence</title>
 </head>
-<body style="font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
-    
-    <h1 style="margin-bottom: 5px;">Vibe Code Intelligence</h1>
-    <p style="color: #555; margin-top: 0; font-size: 16px; font-style: italic;">See what was built. Know where your judgment matters. Get a plan to make it real.</p>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; margin: 0; padding: 0; background: #f5f5f5;">
 
-    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        
-        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Product doc or vibe code prompt(s)</label>
-        <textarea id="strategy" placeholder="Paste your strategy doc, product brief, or the prompts you used to build this. Multiple prompts are fine — paste them all." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
+    <div style="display: flex; min-height: 100vh;">
 
-        <label style="font-weight: bold; display: block; margin-bottom: 5px; margin-top: 15px;">Your code</label>
-        <textarea id="codebase" placeholder="Paste your code here (all files)." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
+        <!-- LEFT SIDEBAR: History -->
+        <div style="width: 260px; background: white; border-right: 1px solid #e0e0e0; padding: 20px; overflow-y: auto;">
+            <h2 style="margin-top: 0; font-size: 16px; color: #333;">History</h2>
+            
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Filter by project</label>
+            <select id="historyFilter" onchange="onHistoryFilterChange()" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; margin-top: 4px; margin-bottom: 15px;">
+                <option value="__all__">All projects</option>
+            </select>
 
-        <button onclick="analyze()" id="analyzeBtn" style="margin-top: 15px; padding: 12px 30px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%;">Analyze</button>
+            <!-- Past Runs -->
+            <div id="history-list" style="font-size: 13px;"></div>
+        </div>
 
-        <p id="timer" style="text-align: center; color: #888; margin-top: 10px; display: none;"></p>
+        <!-- MAIN CONTENT -->
+        <div style="flex: 1; padding: 30px; max-width: 850px; position: relative;">
+            
+            <!-- Top bar: Title + New Evaluation button -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 style="margin-bottom: 5px; margin-top: 0;">Vibe Code Intelligence</h1>
+                    <p style="color: #555; margin-top: 0; font-size: 16px; font-style: italic;">See where AI made decisions. Know where your judgment matters. Get a plan to make a real product.</p>
+                </div>
+                <button onclick="newEvaluation()" style="padding: 8px 16px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; cursor: pointer; white-space: nowrap;">+ New evaluation</button>
+            </div>
 
-        <!-- Advanced Section -->
-        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-            <p onclick="toggleAdvanced()" style="cursor: pointer; color: #2563eb; font-size: 14px; margin: 0;">
-                <span id="advancedArrow">&#9654;</span> Advanced: Add your team's design principles
-            </p>
-            <div id="advanced-section" style="display: none; margin-top: 15px;">
-                <p style="color: #666; font-size: 13px; margin-top: 0;">Do you or your team have design principles? Enter them here and we'll use them in the evaluation.</p>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 
-                <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px;">Design Principles (optional)</label>
-                <textarea id="design_principles" placeholder="e.g., Never more than 2 clicks to core value. Show don't tell. Progressive disclosure. Mobile-first." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;"></textarea>
+                <!-- Project Name: Combo box (type new or pick existing) -->
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Project name <span style="color: #c62828;">*</span></label>
+                <div style="position: relative;">
+                    <input id="projectName" type="text" list="projectList" placeholder="Type a new project name or select existing" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;" />
+                    <datalist id="projectList"></datalist>
+                </div>
+
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Product doc or vibe code prompt(s)</label>
+                <textarea id="strategy" placeholder="Paste your strategy doc, product brief, or the prompts you used to build this. Multiple prompts are fine — paste them all." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
+
+                <label style="font-weight: bold; display: block; margin-bottom: 5px; margin-top: 15px;">Your code</label>
+                <textarea id="codebase" placeholder="Paste your code here (all files)." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
+
+                <button onclick="analyze()" id="analyzeBtn" style="margin-top: 15px; padding: 12px 30px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%;">Analyze</button>
+
+                <p id="timer" style="text-align: center; color: #888; margin-top: 10px; display: none;"></p>
+
+                <!-- Advanced -->
+                <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <p onclick="toggleAdvanced()" style="cursor: pointer; color: #2563eb; font-size: 14px; margin: 0;">
+                        <span id="advancedArrow">&#9654;</span> Advanced: Add your team's design principles
+                    </p>
+                    <div id="advanced-section" style="display: none; margin-top: 15px;">
+                        <p style="color: #666; font-size: 13px; margin-top: 0;">Do you or your team have design principles? Enter them here and we'll use them in the evaluation.</p>
+                        <textarea id="design_principles" placeholder="e.g., Never more than 2 clicks to core value. Show don't tell. Progressive disclosure." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" style="margin-top: 25px; display: none;">
+                
+                <div id="result-project-name" style="margin-bottom: 15px;"></div>
+                <div id="assessment-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
+                <div id="built-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
+                <div id="missed-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
+                <div id="plan-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
             </div>
         </div>
     </div>
 
-    <!-- Results Section -->
-    <div id="results" style="margin-top: 25px; display: none;">
-        
-        <!-- Assessment -->
-        <div id="assessment-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-
-        <!-- What Was Built -->
-        <div id="built-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-
-        <!-- What Wasn't Built -->
-        <div id="missed-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-
-        <!-- Plan to Build -->
-        <div id="plan-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-    </div>
-
     <script>
+        window.onload = function() { loadProjects(); loadHistory('__all__'); };
+
+        function loadProjects() {
+            fetch('/projects').then(function(r) { return r.json(); }).then(function(projects) {
+                // Update datalist for combo box
+                var datalist = document.getElementById('projectList');
+                datalist.innerHTML = '';
+                projects.forEach(function(name) {
+                    var opt = document.createElement('option');
+                    opt.value = name;
+                    datalist.appendChild(opt);
+                });
+
+                // Update history filter dropdown
+                var filter = document.getElementById('historyFilter');
+                filter.innerHTML = '<option value="__all__">All projects</option>';
+                projects.forEach(function(name) {
+                    var opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    filter.appendChild(opt);
+                });
+            });
+        }
+
+        function onHistoryFilterChange() {
+            var filter = document.getElementById('historyFilter');
+            loadHistory(filter.value);
+        }
+
+        function loadHistory(projectFilter) {
+            var url = '/history?project=' + encodeURIComponent(projectFilter);
+            fetch(url).then(function(r) { return r.json(); }).then(function(history) {
+                var list = document.getElementById('history-list');
+                if (history.length === 0) { list.innerHTML = '<p style="color:#999;">No past analyses yet.</p>'; return; }
+                var html = '';
+                history.forEach(function(item) {
+                    var date = new Date(item.timestamp);
+                    var dateStr = date.toLocaleDateString();
+                    var timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    var projectLabel = item.project_name ? '<span style="font-size:11px;color:#2563eb;">' + item.project_name + '</span><br>' : '';
+                    html += '<div onclick="viewPastAnalysis(' + item.id + ')" style="padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; background: white;" onmouseover="this.style.background=\'#f0f4ff\'" onmouseout="this.style.background=\'white\'">' +
+                        projectLabel +
+                        '<strong style="font-size:12px;">' + dateStr + ' ' + timeStr + '</strong><br>' +
+                        '<span style="color:#2e7d32;">' + item.built_count + ' built</span> · ' +
+                        '<span style="color:#c62828;">' + item.missed_count + ' missed</span><br>' +
+                        '<span style="color:#666;font-size:12px;">Cost: ' + (item.cost_estimate || 'N/A') + '</span>' +
+                        '</div>';
+                });
+                list.innerHTML = html;
+            });
+        }
+
+        function viewPastAnalysis(id) {
+            fetch('/history/' + id).then(function(r) { return r.json(); }).then(function(data) {
+                document.getElementById('results').style.display = 'block';
+                renderResults(data, data._project_name || '');
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        function newEvaluation() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('projectName').value = '';
+            document.getElementById('strategy').value = '';
+            document.getElementById('codebase').value = '';
+            if (document.getElementById('design_principles')) document.getElementById('design_principles').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function toggleAdvanced() {
             var section = document.getElementById('advanced-section');
             var arrow = document.getElementById('advancedArrow');
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                arrow.innerHTML = '&#9660;';
-            } else {
-                section.style.display = 'none';
-                arrow.innerHTML = '&#9654;';
-            }
+            if (section.style.display === 'none') { section.style.display = 'block'; arrow.innerHTML = '&#9660;'; }
+            else { section.style.display = 'none'; arrow.innerHTML = '&#9654;'; }
         }
 
         async function analyze() {
             var strategy = document.getElementById('strategy').value;
             var codebase = document.getElementById('codebase').value;
-            var design_principles = document.getElementById('design_principles').value;
+            var design_principles = document.getElementById('design_principles') ? document.getElementById('design_principles').value : '';
             var btn = document.getElementById('analyzeBtn');
             var timer = document.getElementById('timer');
             var results = document.getElementById('results');
 
-            if (!codebase) {
-                alert('Please paste your code.');
-                return;
-            }
+            var project_name = document.getElementById('projectName').value.trim();
+            if (!project_name) { alert('Please enter a project name.'); return; }
+            if (!codebase) { alert('Please paste your code.'); return; }
 
-            btn.disabled = true;
-            btn.textContent = 'Analyzing...';
-            results.style.display = 'none';
-            timer.style.display = 'block';
+            btn.disabled = true; btn.textContent = 'Analyzing...';
+            results.style.display = 'none'; timer.style.display = 'block';
 
             var seconds = 0;
-            var interval = setInterval(function() {
-                seconds++;
-                timer.textContent = 'Analyzing your prototype... ' + seconds + 's';
-            }, 1000);
+            var interval = setInterval(function() { seconds++; timer.textContent = 'Analyzing your prototype... ' + seconds + 's'; }, 1000);
 
             try {
                 var response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        strategy: strategy,
-                        codebase: codebase,
-                        design_principles: design_principles
-                    })
+                    body: JSON.stringify({ strategy: strategy, codebase: codebase, design_principles: design_principles, project_name: project_name })
                 });
-
                 var data = await response.json();
-                clearInterval(interval);
-                timer.style.display = 'none';
-                btn.disabled = false;
-                btn.textContent = 'Analyze';
+                clearInterval(interval); timer.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Analyze';
 
-                if (data.error) {
-                    alert('Analysis failed\n\n' + data.error);
-                    return;
-                }
+                if (data.error) { alert('Analysis failed\n\n' + data.error); return; }
+
+                loadProjects();
+                loadHistory(document.getElementById('historyFilter').value);
 
                 results.style.display = 'block';
-                renderResults(data);
+                renderResults(data, data._project_name || project_name);
 
             } catch (err) {
-                clearInterval(interval);
-                timer.style.display = 'none';
-                btn.disabled = false;
-                btn.textContent = 'Analyze';
+                clearInterval(interval); timer.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Analyze';
                 alert('Something went wrong. Please try again.');
             }
         }
 
-        function renderResults(data) {
-            // Assessment
+        function renderResults(data, projectLabel) {
+            // Project Name
+            document.getElementById('result-project-name').innerHTML = '<h2 style="margin:0;color:#333;">' + projectLabel + '</h2>';
+
+            // Assessment — just counts + cost
             var a = data.assessment;
             document.getElementById('assessment-section').innerHTML =
-                '<h2 style="margin-top:0;">Assessment</h2>' +
-                '<p style="font-size: 18px;">' +
-                '<strong>' + a.built_count + '</strong> features from doc/prompt built &nbsp;|&nbsp; ' +
-                '<strong>' + a.missed_count + '</strong> features from doc/prompt not built</p>' +
-                '<p style="background: #f0f7ff; padding: 12px; border-radius: 6px; border-left: 4px solid #2563eb;">' +
-                '<strong>Top recommendation:</strong> ' + a.recommendation + '</p>';
+                '<h2 style="margin-top:0; font-size: 18px;">Assessment</h2>' +
+                '<p style="font-size: 16px; margin: 0;">' +
+                '<strong style="color:#2e7d32;">' + a.built_count + '</strong> features from doc/prompt built &nbsp;&nbsp;|&nbsp;&nbsp; ' +
+                '<strong style="color:#c62828;">' + a.missed_count + '</strong> features from doc/prompt not built</p>' +
+                '<p style="font-size:16px;margin-top:8px;color:#333;">Cost to final product: ' + (a.cost_estimate || 'N/A') + '</p>';
 
-            // What Was Built
-            var builtHTML = '<h2 style="margin-top:0;">What Was Built</h2>';
+            // What was built — TABLE
+            var builtHTML = '<h2 style="margin-top:0; font-size: 18px;">What was built</h2>';
             if (data.what_was_built && data.what_was_built.length > 0) {
-                data.what_was_built.forEach(function(item) {
-                    var sourceTag = item.source === 'from_doc' ?
-                        '<span style="background:#e8f5e9;padding:2px 8px;border-radius:10px;font-size:12px;">from doc</span>' :
-                        '<span style="background:#fff3e0;padding:2px 8px;border-radius:10px;font-size:12px;">vibe code addition</span>';
-                    var doorTag = item.door_type === 'one_way' ?
-                        '<span style="background:#ffebee;padding:2px 8px;border-radius:10px;font-size:12px;">one-way door</span>' :
-                        '<span style="background:#e8f5e9;padding:2px 8px;border-radius:10px;font-size:12px;">two-way door</span>';
-                    builtHTML += '<div style="border:1px solid #eee;padding:12px;border-radius:6px;margin-bottom:10px;">' +
-                        '<strong>' + item.feature + '</strong> ' + sourceTag + ' ' + doorTag +
-                        '<br><span style="color:#666;font-size:13px;">Where: ' + item.where_in_product + '</span>';
-                    if (item.other_potential_options) {
-                        builtHTML += '<br><span style="color:#888;font-size:13px;font-style:italic;">Other options: ' + item.other_potential_options + '</span>';
+                builtHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+                builtHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">What exists in product</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Call-out, other options</th></tr>';
+                
+                var builtItems = data.what_was_built;
+                var builtShowCount = Math.min(builtItems.length, 5);
+                
+                for (var i = 0; i < builtItems.length; i++) {
+                    var item = builtItems[i];
+                    var sourceTag = item.source === 'from_doc_prompt' ?
+                        '<span style="background:#e8f5e9;padding:1px 6px;border-radius:8px;font-size:11px;">from doc/prompt</span>' :
+                        '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">vibe code addition</span>';
+                    var hideStyle = i >= builtShowCount ? ' style="display:none;" class="built-extra"' : '';
+                    
+                    // Format callout and other_options — other_options in smaller font
+                    var calloutContent = item.callout || '';
+                    var otherOptions = item.other_options || '';
+                    var combinedContent = '<span style="font-size:14px;">' + calloutContent + '</span>';
+                    if (otherOptions) {
+                        combinedContent += '<br><br><span style="font-size:12px;color:#666;"><strong>Other options:</strong> ' + otherOptions + '</span>';
                     }
-                    builtHTML += '</div>';
-                });
+                    
+                    builtHTML += '<tr' + hideStyle + '><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        '<strong>' + item.feature + '</strong> ' + sourceTag +
+                        (item.doc_reference ? '<br><em style="color:#666;font-size:12px;">"' + item.doc_reference + '"</em>' : '') +
+                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        (item.what_exists_in_product || '') +
+                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        combinedContent +
+                        '</td></tr>';
+                }
+                builtHTML += '</table>';
+                
+                if (builtItems.length > builtShowCount) {
+                    builtHTML += '<p onclick="toggleBuiltExtra()" style="cursor:pointer;color:#2563eb;font-size:13px;margin-top:8px;" id="built-toggle">Show ' + (builtItems.length - builtShowCount) + ' more &#9660;</p>';
+                }
             }
             document.getElementById('built-section').innerHTML = builtHTML;
 
-            // What Wasn't Built
-            var missedHTML = '<h2 style="margin-top:0;">What Wasn\'t Built</h2>';
+            // What wasn't built — TABLE
+            var missedHTML = '<h2 style="margin-top:0; font-size: 18px;">What wasn\'t built</h2>';
             if (data.what_wasnt_built && data.what_wasnt_built.length > 0) {
-                data.what_wasnt_built.forEach(function(item) {
+                missedHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+                missedHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Call-out</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Action</th></tr>';
+                
+                var missedItems = data.what_wasnt_built;
+                var missedShowCount = Math.min(missedItems.length, 5);
+                
+                for (var j = 0; j < missedItems.length; j++) {
+                    var mItem = missedItems[j];
                     var reasonTag = '';
-                    if (item.reason === 'vibe_code_miss') reasonTag = '<span style="background:#fff3e0;padding:2px 8px;border-radius:10px;font-size:12px;">vibe code miss</span>';
-                    else if (item.reason === 'needs_direction') reasonTag = '<span style="background:#e3f2fd;padding:2px 8px;border-radius:10px;font-size:12px;">needs direction</span>';
-                    else reasonTag = '<span style="background:#fce4ec;padding:2px 8px;border-radius:10px;font-size:12px;">vibe coding limitation</span>';
-                    var doorTag = item.door_type === 'one_way' ?
-                        '<span style="background:#ffebee;padding:2px 8px;border-radius:10px;font-size:12px;">one-way door</span>' :
-                        '<span style="background:#e8f5e9;padding:2px 8px;border-radius:10px;font-size:12px;">two-way door</span>';
-                    missedHTML += '<div style="border:1px solid #eee;padding:12px;border-radius:6px;margin-bottom:10px;">' +
-                        '<strong>' + item.feature + '</strong> ' + reasonTag + ' ' + doorTag +
-                        '<br><span style="color:#666;font-size:13px;">Action: ' + item.action + '</span>' +
-                        '<br><span style="color:#666;font-size:13px;">Status: ' + item.status + '</span>';
-                    if (item.other_potential_options) {
-                        missedHTML += '<br><span style="color:#888;font-size:13px;font-style:italic;">Other options: ' + item.other_potential_options + '</span>';
-                    }
-                    missedHTML += '</div>';
-                });
+                    if (mItem.reason === 'vibe_code_miss') reasonTag = '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">vibe code miss</span>';
+                    else if (mItem.reason === 'needs_your_input') reasonTag = '<span style="background:#e3f2fd;padding:1px 6px;border-radius:8px;font-size:11px;">needs your input</span>';
+                    else reasonTag = '<span style="background:#fce4ec;padding:1px 6px;border-radius:8px;font-size:11px;">vibe coding limitation</span>';
+                    
+                    var mHideStyle = j >= missedShowCount ? ' style="display:none;" class="missed-extra"' : '';
+                    
+                    missedHTML += '<tr' + mHideStyle + '><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        '<strong>' + mItem.feature + '</strong>' +
+                        (mItem.doc_reference ? '<br><em style="color:#666;font-size:12px;">"' + mItem.doc_reference + '"</em>' : '') +
+                        '<br>' + reasonTag +
+                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        (mItem.callout || '—') +
+                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                        mItem.action +
+                        '</td></tr>';
+                }
+                missedHTML += '</table>';
+                
+                if (missedItems.length > missedShowCount) {
+                    missedHTML += '<p onclick="toggleMissedExtra()" style="cursor:pointer;color:#2563eb;font-size:13px;margin-top:8px;" id="missed-toggle">Show ' + (missedItems.length - missedShowCount) + ' more &#9660;</p>';
+                }
             }
             document.getElementById('missed-section').innerHTML = missedHTML;
 
-            // Plan to Build
-            var planHTML = '<h2 style="margin-top:0;">Plan to Build</h2>';
+            // Plan to build — THREE TABLES
+            var planHTML = '<h2 style="margin-top:0; font-size: 18px;">Plan to build</h2>';
             if (data.plan_to_build) {
-                if (data.plan_to_build.biggest_tradeoff) {
-                    planHTML += '<p style="background:#fff8e1;padding:12px;border-radius:6px;border-left:4px solid #f9a825;">' +
-                        '<strong>Biggest tradeoff:</strong> ' + data.plan_to_build.biggest_tradeoff + '</p>';
-                }
-                if (data.plan_to_build.stages) {
-                    data.plan_to_build.stages.forEach(function(stage) {
-                        planHTML += '<div style="margin-bottom:15px;">' +
-                            '<h3 style="margin-bottom:5px;">' + stage.stage_name.replace(/_/g, ' ') +
-                            ' <span style="font-weight:normal;color:#666;">(Effort: ' + stage.effort + ')</span></h3>' +
-                            '<p style="color:#555;margin-top:0;">' + stage.description + '</p>';
-                        if (stage.items) {
-                            stage.items.forEach(function(item) {
-                                var doorColor = item.door_type === 'one_way' ? '#ffebee' : '#e8f5e9';
-                                planHTML += '<div style="border-left:3px solid #2563eb;padding:8px 12px;margin-bottom:8px;background:#fafafa;">' +
-                                    '<strong>' + item.item + '</strong>' +
-                                    ' <span style="font-size:12px;color:#666;">(' + item.effort + ')</span>' +
-                                    '<br><span style="font-size:13px;color:#555;">Action: ' + item.action + '</span>' +
-                                    '<br><span style="font-size:12px;background:' + doorColor + ';padding:2px 6px;border-radius:8px;">' + item.door_type.replace(/_/g, ' ') + ' door</span>' +
-                                    ' <span style="font-size:12px;color:#888;">' + item.door_reasoning + '</span>' +
-                                    '</div>';
-                            });
-                        }
-                        planHTML += '</div>';
-                    });
-                }
+                var stages = [
+                    { key: 'shareable_demo', label: 'Shareable demo' },
+                    { key: 'beta', label: 'Beta' },
+                    { key: 'final_product', label: 'Final product' }
+                ];
+                
+                stages.forEach(function(stage) {
+                    var items = data.plan_to_build[stage.key];
+                    if (items && items.length > 0) {
+                        planHTML += '<h3 style="font-size:16px;margin-bottom:8px;margin-top:20px;">' + stage.label + '</h3>';
+                        planHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+                        planHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Description</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Action</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Effort</th></tr>';
+                        
+                        items.forEach(function(pItem) {
+                            var doorTag = pItem.door_type === 'one_way' ?
+                                '<span style="background:#ffebee;padding:1px 6px;border-radius:8px;font-size:11px;">one-way door</span>' :
+                                '<span style="background:#e8f5e9;padding:1px 6px;border-radius:8px;font-size:11px;">two-way door</span>';
+                            
+                            var actionTag = '';
+                            if (pItem.action === 're-prompt') actionTag = '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">re-prompt</span>';
+                            else if (pItem.action === 'needs_your_input') actionTag = '<span style="background:#e3f2fd;padding:1px 6px;border-radius:8px;font-size:11px;">needs your input</span>';
+                            else if (pItem.action === 'needs_engineering') actionTag = '<span style="background:#fce4ec;padding:1px 6px;border-radius:8px;font-size:11px;">needs engineering</span>';
+                            else if (pItem.action === 'needs_designer') actionTag = '<span style="background:#f3e5f5;padding:1px 6px;border-radius:8px;font-size:11px;">needs designer</span>';
+                            else actionTag = pItem.action;
+                            
+                            planHTML += '<tr><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                                '<strong>' + pItem.feature + '</strong> ' + doorTag +
+                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                                pItem.description +
+                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                                actionTag +
+                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
+                                pItem.effort +
+                                '</td></tr>';
+                        });
+                        planHTML += '</table>';
+                    }
+                });
             }
             document.getElementById('plan-section').innerHTML = planHTML;
+        }
+
+        function toggleBuiltExtra() {
+            var extras = document.querySelectorAll('.built-extra');
+            var toggle = document.getElementById('built-toggle');
+            var showing = extras[0] && extras[0].style.display !== 'none';
+            extras.forEach(function(el) { el.style.display = showing ? 'none' : 'table-row'; });
+            toggle.innerHTML = showing ? 'Show ' + extras.length + ' more &#9660;' : 'Show less &#9650;';
+        }
+
+        function toggleMissedExtra() {
+            var extras = document.querySelectorAll('.missed-extra');
+            var toggle = document.getElementById('missed-toggle');
+            var showing = extras[0] && extras[0].style.display !== 'none';
+            extras.forEach(function(el) { el.style.display = showing ? 'none' : 'table-row'; });
+            toggle.innerHTML = showing ? 'Show ' + extras.length + ' more &#9660;' : 'Show less &#9650;';
         }
     </script>
 </body>
