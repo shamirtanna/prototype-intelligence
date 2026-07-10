@@ -31,12 +31,13 @@
         .assessment-stats { font-size: 16px; margin: 10px 0; }
         .cost-estimate { background: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; }
         .section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .section h3 { margin-top: 0; }
-        .section h4 { margin-top: 20px; margin-bottom: 10px; color: #374151; }
+        .section h3 { margin-top: 0; font-size: 16px; }
+        .section h4 { margin-top: 20px; margin-bottom: 10px; color: #374151; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; font-weight: 600; }
-        td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-right: 4px; }
+        th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; font-weight: 600; font-size: 13px; }
+        td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; font-size: 13px; font-weight: normal; }
+        .feature-name { font-weight: 600; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-top: 4px; }
         .tag-missed { background: #fecaca; color: #991b1b; }
         .tag-input { background: #e0e7ff; color: #3730a3; }
         .tag-engineering { background: #f3e8ff; color: #6b21a8; }
@@ -44,8 +45,9 @@
         .tag-one-way { background: #fee2e2; color: #991b1b; }
         .tag-two-way { background: #d1fae5; color: #065f46; }
         .reference { font-style: italic; color: #666; font-size: 12px; }
-        .callout { color: #374151; font-size: 12px; margin-top: 4px; line-height: 1.4; }
-        .other-options { color: #555; font-size: 12px; margin-top: 4px; }
+        .callout { font-size: 13px; line-height: 1.4; }
+        .other-options { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+        .options-col { width: 30%; }
         .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: white; border-right: 1px solid #e2e8f0; padding: 20px; overflow-y: auto; }
         .sidebar h4 { margin-top: 0; }
         .sidebar select { width: 100%; padding: 6px; margin-bottom: 10px; font-size: 13px; }
@@ -120,7 +122,7 @@
                         <tr>
                             <th>Feature</th>
                             <th>What exists in the product</th>
-                            <th>Other options</th>
+                            <th class="options-col">Other options</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -153,7 +155,7 @@
                             <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
-                            <th>Other options</th>
+                            <th class="options-col">Other options</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -167,7 +169,7 @@
                             <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
-                            <th>Other options</th>
+                            <th class="options-col">Other options</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -181,7 +183,7 @@
                             <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
-                            <th>Other options</th>
+                            <th class="options-col">Other options</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -198,10 +200,10 @@
             const toggle = document.querySelector('.advanced-toggle');
             if (section.style.display === 'none' || section.style.display === '') {
                 section.style.display = 'block';
-                toggle.textContent = '▼ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
+                toggle.textContent = '\u25BC Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
             } else {
                 section.style.display = 'none';
-                toggle.textContent = '▶ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
+                toggle.textContent = '\u25B6 Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
             }
         }
 
@@ -239,7 +241,7 @@
 
         function formatTag(tag) {
             const map = {
-                'missed_in_build': 'Missed — re-run',
+                'missed_in_build': 'Missed \u2014 re-run',
                 'needs_your_input': 'Needs your input',
                 'needs_engineering': 'Needs engineering',
                 'needs_design': 'Needs design'
@@ -252,6 +254,11 @@
             if (doorType.includes('one-way')) return '<span class="tag tag-one-way">one-way door</span> ';
             if (doorType.includes('two-way')) return '<span class="tag tag-two-way">two-way door</span> ';
             return '';
+        }
+
+        function formatOptions(options) {
+            if (!options) return '\u2014';
+            return '<span class="other-options">' + options + '</span>';
         }
 
         function saveToHistory(projectName, result) {
@@ -273,15 +280,15 @@
             const suggestions = document.getElementById('projectSuggestions');
 
             const projects = [...new Set(history.map(h => h.project).filter(Boolean))];
-            const filterOptions = '<option value="all">All projects</option>' + projects.map(p => `<option value="${p}"${filter === p ? ' selected' : ''}>${p}</option>`).join('');
+            const filterOptions = '<option value="all">All projects</option>' + projects.map(p => '<option value="' + p + '"' + (filter === p ? ' selected' : '') + '>' + p + '</option>').join('');
             document.getElementById('historyFilter').innerHTML = filterOptions;
 
-            suggestions.innerHTML = projects.map(p => `<option value="${p}">`).join('');
+            suggestions.innerHTML = projects.map(p => '<option value="' + p + '">').join('');
 
             const filtered = filter === 'all' ? history : history.filter(h => h.project === filter);
             list.innerHTML = filtered.map((h, i) => {
                 const date = new Date(h.date).toLocaleDateString();
-                return `<div class="history-item" onclick="loadHistory(${i})">${h.project || 'Unnamed'} — ${date}</div>`;
+                return '<div class="history-item" onclick="loadHistory(' + i + ')">' + (h.project || 'Unnamed') + ' \u2014 ' + date + '</div>';
             }).join('');
         }
 
@@ -297,36 +304,34 @@
 
             // Assessment
             document.getElementById('assessmentStats').innerHTML =
-                `${data.assessment.features_built} features from doc/prompt built  |  ${data.assessment.features_not_built} features from doc/prompt not built`;
+                data.assessment.features_built + ' features from doc/prompt built  |  ' + data.assessment.features_not_built + ' features from doc/prompt not built';
             document.getElementById('costEstimate').innerHTML =
-                `<strong>Cost estimate:</strong> ${data.assessment.cost_estimate}`;
+                '<strong>Cost estimate to final product:</strong> ' + data.assessment.cost_estimate;
 
             // What exists in product
             const builtBody = document.querySelector('#builtTable tbody');
-            builtBody.innerHTML = data.what_exists_in_product.map(item => `
-                <tr>
-                    <td>
-                        <strong>${item.feature}</strong>
-                        ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
-                    </td>
-                    <td>${item.what_exists}</td>
-                    <td>${item.other_potential_options ? `<span class="other-options">${item.other_potential_options}</span>` : '—'}</td>
-                </tr>
-            `).join('');
+            builtBody.innerHTML = data.what_exists_in_product.map(item =>
+                '<tr>' +
+                    '<td><span class="feature-name">' + item.feature + '</span>' +
+                    (item.reference_from_doc ? '<br><span class="reference">' + item.reference_from_doc + '</span>' : '') +
+                    '</td>' +
+                    '<td>' + item.what_exists + '</td>' +
+                    '<td class="options-col">' + formatOptions(item.other_potential_options) + '</td>' +
+                '</tr>'
+            ).join('');
 
             // What wasn't built
             const notBuiltBody = document.querySelector('#notBuiltTable tbody');
-            notBuiltBody.innerHTML = data.what_wasnt_built.map(item => `
-                <tr>
-                    <td>
-                        <strong>${item.feature}</strong>
-                        ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
-                        <br><span class="tag ${getTagClass(item.tag)}">${formatTag(item.tag)}</span>
-                    </td>
-                    <td><span class="callout">${item.callout}</span></td>
-                    <td>${item.action}</td>
-                </tr>
-            `).join('');
+            notBuiltBody.innerHTML = data.what_wasnt_built.map(item =>
+                '<tr>' +
+                    '<td><span class="feature-name">' + item.feature + '</span>' +
+                    (item.reference_from_doc ? '<br><span class="reference">' + item.reference_from_doc + '</span>' : '') +
+                    '<br><span class="tag ' + getTagClass(item.tag) + '">' + formatTag(item.tag) + '</span>' +
+                    '</td>' +
+                    '<td><span class="callout">' + item.callout + '</span></td>' +
+                    '<td>' + item.action + '</td>' +
+                '</tr>'
+            ).join('');
 
             // Plan to build tables
             renderPlanTable('demoTable', data.plan_to_build.shareable_demo || []);
@@ -335,16 +340,16 @@
         }
 
         function renderPlanTable(tableId, items) {
-            const tbody = document.querySelector(`#${tableId} tbody`);
-            tbody.innerHTML = items.map(item => `
-                <tr>
-                    <td><strong>${item.feature}</strong> ${getDoorTag(item.door_type)}</td>
-                    <td><span class="callout">${item.callout}</span></td>
-                    <td>${item.action}</td>
-                    <td>${item.effort}</td>
-                    <td>${item.other_options ? `<span class="other-options">${item.other_options}</span>` : '—'}</td>
-                </tr>
-            `).join('');
+            const tbody = document.querySelector('#' + tableId + ' tbody');
+            tbody.innerHTML = items.map(item =>
+                '<tr>' +
+                    '<td><span class="feature-name">' + item.feature + '</span> ' + getDoorTag(item.door_type) + '</td>' +
+                    '<td><span class="callout">' + item.callout + '</span></td>' +
+                    '<td>' + item.action + '</td>' +
+                    '<td>' + item.effort + '</td>' +
+                    '<td class="options-col">' + formatOptions(item.other_options) + '</td>' +
+                '</tr>'
+            ).join('');
         }
 
         async function analyze() {
