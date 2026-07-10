@@ -3,350 +3,389 @@
 <html>
 <head>
     <title>Vibe Code Intelligence</title>
+    <style>
+        * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { max-width: 900px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+        h1 { margin-bottom: 5px; }
+        .tagline { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .input-section { display: flex; gap: 15px; margin-bottom: 15px; }
+        .input-section textarea { flex: 1; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .advanced-toggle { cursor: pointer; color: #666; font-size: 13px; margin-bottom: 10px; }
+        .advanced-section { display: none; margin-bottom: 15px; }
+        .advanced-section textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .project-name-input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 250px; }
+        button { padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #1d4ed8; }
+        .loading { display: none; margin: 20px 0; }
+        .timer { color: #666; font-size: 13px; margin-top: 5px; }
+        .results { margin-top: 30px; }
+        .assessment-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .assessment-box h2 { margin-top: 0; font-size: 18px; }
+        .assessment-stats { font-size: 16px; margin: 10px 0; }
+        .cost-estimate { background: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; }
+        .section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .section h3 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; font-weight: 600; }
+        td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .tag-working { background: #dcfce7; color: #166534; }
+        .tag-placeholder { background: #fef9c3; color: #854d0e; }
+        .tag-partial { background: #ffe4e6; color: #9f1239; }
+        .tag-vibe-code-miss { background: #fecaca; color: #991b1b; }
+        .tag-needs-pm-decision { background: #e0e7ff; color: #3730a3; }
+        .tag-needs-engineer { background: #f3e8ff; color: #6b21a8; }
+        .tag-needs-designer { background: #fce7f3; color: #9d174d; }
+        .tag-one-way { background: #fee2e2; color: #991b1b; }
+        .tag-two-way { background: #d1fae5; color: #065f46; }
+        .reference { font-style: italic; color: #666; font-size: 12px; }
+        .other-options { color: #555; font-size: 12px; margin-top: 4px; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: white; border-right: 1px solid #e2e8f0; padding: 20px; overflow-y: auto; }
+        .sidebar h4 { margin-top: 0; }
+        .sidebar select { width: 100%; padding: 6px; margin-bottom: 10px; font-size: 13px; }
+        .sidebar .history-item { padding: 8px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; }
+        .sidebar .history-item:hover { background: #f8fafc; }
+        .main-content { margin-left: 260px; }
+        .error { color: #dc2626; background: #fef2f2; padding: 12px; border-radius: 6px; margin-top: 15px; }
+    </style>
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; margin: 0; padding: 0; background: #f5f5f5;">
+<body>
+    <div class="sidebar">
+        <h4>History</h4>
+        <select id="historyFilter">
+            <option value="all">All projects</option>
+        </select>
+        <div id="historyList"></div>
+    </div>
 
-    <div style="display: flex; min-height: 100vh;">
+    <div class="main-content">
+        <h1>Vibe Code Intelligence</h1>
+        <p class="tagline">See where AI made decisions. Know where your judgment matters. Get a plan to make it a real product.</p>
 
-        <!-- LEFT SIDEBAR: History -->
-        <div style="width: 260px; background: white; border-right: 1px solid #e0e0e0; padding: 20px; overflow-y: auto;">
-            <h2 style="margin-top: 0; font-size: 16px; color: #333;">History</h2>
-            
-            <label style="font-size: 13px; font-weight: bold; color: #555;">Filter by project</label>
-            <select id="historyFilter" onchange="onHistoryFilterChange()" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; margin-top: 4px; margin-bottom: 15px;">
-                <option value="__all__">All projects</option>
-            </select>
-
-            <!-- Past Runs -->
-            <div id="history-list" style="font-size: 13px;"></div>
+        <div class="top-bar">
+            <input type="text" class="project-name-input" id="projectName" placeholder="Project name" list="projectSuggestions">
+            <datalist id="projectSuggestions"></datalist>
+            <button onclick="analyze()">+ New evaluation</button>
         </div>
 
-        <!-- MAIN CONTENT -->
-        <div style="flex: 1; padding: 30px; max-width: 850px; position: relative;">
-            
-            <!-- Top bar: Title + New Evaluation button -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h1 style="margin-bottom: 5px; margin-top: 0;">Vibe Code Intelligence</h1>
-                    <p style="color: #555; margin-top: 0; font-size: 16px; font-style: italic;">See where AI made decisions. Know where your judgment matters. Get a plan to make a real product.</p>
-                </div>
-                <button onclick="newEvaluation()" style="padding: 8px 16px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; cursor: pointer; white-space: nowrap;">+ New evaluation</button>
+        <div class="input-section">
+            <textarea id="strategy" placeholder="Your product doc or vibe code prompt (the plan, what you told the AI to build)"></textarea>
+            <textarea id="codebase" placeholder="Your vibe code product codebase (the code that was generated)"></textarea>
+        </div>
+
+        <div class="advanced-toggle" onclick="toggleAdvanced()">▶ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.</div>
+        <div class="advanced-section" id="advancedSection">
+            <textarea id="designPrinciples" placeholder="Design principles, engineering estimation methods, or other context..."></textarea>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>Analyzing your vibe code...</p>
+            <p class="timer" id="timer">0s</p>
+        </div>
+
+        <div class="error" id="error" style="display:none;"></div>
+
+        <div class="results" id="results" style="display:none;">
+            <!-- Assessment -->
+            <div class="assessment-box">
+                <h2>Assessment</h2>
+                <div class="assessment-stats" id="assessmentStats"></div>
+                <div class="cost-estimate" id="costEstimate"></div>
             </div>
 
-            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                
-                <!-- Project Name: Combo box (type new or pick existing) -->
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Project name <span style="color: #c62828;">*</span></label>
-                <div style="position: relative;">
-                    <input id="projectName" type="text" list="projectList" placeholder="Type a new project name or select existing" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;" />
-                    <datalist id="projectList"></datalist>
-                </div>
-
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Product doc or vibe code prompt(s)</label>
-                <textarea id="strategy" placeholder="Paste your strategy doc, product brief, or the prompts you used to build this. Multiple prompts are fine — paste them all." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
-
-                <label style="font-weight: bold; display: block; margin-bottom: 5px; margin-top: 15px;">Your code</label>
-                <textarea id="codebase" placeholder="Paste your code here (all files)." style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;"></textarea>
-
-                <button onclick="analyze()" id="analyzeBtn" style="margin-top: 15px; padding: 12px 30px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%;">Analyze</button>
-
-                <p id="timer" style="text-align: center; color: #888; margin-top: 10px; display: none;"></p>
-
-                <!-- Advanced -->
-                <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <p onclick="toggleAdvanced()" style="cursor: pointer; color: #2563eb; font-size: 14px; margin: 0;">
-                        <span id="advancedArrow">&#9654;</span> Advanced: Add your team's design principles
-                    </p>
-                    <div id="advanced-section" style="display: none; margin-top: 15px;">
-                        <p style="color: #666; font-size: 13px; margin-top: 0;">Do you or your team have design principles? Enter them here and we'll use them in the evaluation.</p>
-                        <textarea id="design_principles" placeholder="e.g., Never more than 2 clicks to core value. Show don't tell. Progressive disclosure." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;"></textarea>
-                    </div>
-                </div>
+            <!-- What exists in product -->
+            <div class="section">
+                <h3>What exists in product</h3>
+                <table id="builtTable">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Other options</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
-            <!-- Results -->
-            <div id="results" style="margin-top: 25px; display: none;">
-                
-                <div id="result-project-name" style="margin-bottom: 15px;"></div>
-                <div id="assessment-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-                <div id="built-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-                <div id="missed-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
-                <div id="plan-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;"></div>
+            <!-- What wasn't built -->
+            <div class="section">
+                <h3>What wasn't built</h3>
+                <table id="notBuiltTable">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Reason</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Plan to build -->
+            <div class="section">
+                <h3>Plan to build</h3>
+                <h4>Shareable demo</h4>
+                <table id="demoTable">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            <th>Effort</th>
+                            <th>Other options</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <h4>Beta</h4>
+                <table id="betaTable">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            <th>Effort</th>
+                            <th>Other options</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <h4>Final product</h4>
+                <table id="finalTable">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            <th>Effort</th>
+                            <th>Other options</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        window.onload = function() { loadProjects(); loadHistory('__all__'); };
-
-        function loadProjects() {
-            fetch('/projects').then(function(r) { return r.json(); }).then(function(projects) {
-                // Update datalist for combo box
-                var datalist = document.getElementById('projectList');
-                datalist.innerHTML = '';
-                projects.forEach(function(name) {
-                    var opt = document.createElement('option');
-                    opt.value = name;
-                    datalist.appendChild(opt);
-                });
-
-                // Update history filter dropdown
-                var filter = document.getElementById('historyFilter');
-                filter.innerHTML = '<option value="__all__">All projects</option>';
-                projects.forEach(function(name) {
-                    var opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
-                    filter.appendChild(opt);
-                });
-            });
-        }
-
-        function onHistoryFilterChange() {
-            var filter = document.getElementById('historyFilter');
-            loadHistory(filter.value);
-        }
-
-        function loadHistory(projectFilter) {
-            var url = '/history?project=' + encodeURIComponent(projectFilter);
-            fetch(url).then(function(r) { return r.json(); }).then(function(history) {
-                var list = document.getElementById('history-list');
-                if (history.length === 0) { list.innerHTML = '<p style="color:#999;">No past analyses yet.</p>'; return; }
-                var html = '';
-                history.forEach(function(item) {
-                    var date = new Date(item.timestamp);
-                    var dateStr = date.toLocaleDateString();
-                    var timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    var projectLabel = item.project_name ? '<span style="font-size:11px;color:#2563eb;">' + item.project_name + '</span><br>' : '';
-                    html += '<div onclick="viewPastAnalysis(' + item.id + ')" style="padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; background: white;" onmouseover="this.style.background=\'#f0f4ff\'" onmouseout="this.style.background=\'white\'">' +
-                        projectLabel +
-                        '<strong style="font-size:12px;">' + dateStr + ' ' + timeStr + '</strong><br>' +
-                        '<span style="color:#2e7d32;">' + item.built_count + ' built</span> · ' +
-                        '<span style="color:#c62828;">' + item.missed_count + ' missed</span><br>' +
-                        '<span style="color:#666;font-size:12px;">Cost: ' + (item.cost_estimate || 'N/A') + '</span>' +
-                        '</div>';
-                });
-                list.innerHTML = html;
-            });
-        }
-
-        function viewPastAnalysis(id) {
-            fetch('/history/' + id).then(function(r) { return r.json(); }).then(function(data) {
-                document.getElementById('results').style.display = 'block';
-                renderResults(data, data._project_name || '');
-                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-            });
-        }
-
-        function newEvaluation() {
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('projectName').value = '';
-            document.getElementById('strategy').value = '';
-            document.getElementById('codebase').value = '';
-            if (document.getElementById('design_principles')) document.getElementById('design_principles').value = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        let timerInterval;
 
         function toggleAdvanced() {
-            var section = document.getElementById('advanced-section');
-            var arrow = document.getElementById('advancedArrow');
-            if (section.style.display === 'none') { section.style.display = 'block'; arrow.innerHTML = '&#9660;'; }
-            else { section.style.display = 'none'; arrow.innerHTML = '&#9654;'; }
+            const section = document.getElementById('advancedSection');
+            const toggle = document.querySelector('.advanced-toggle');
+            if (section.style.display === 'none' || section.style.display === '') {
+                section.style.display = 'block';
+                toggle.textContent = '▼ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
+            } else {
+                section.style.display = 'none';
+                toggle.textContent = '▶ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
+            }
+        }
+
+        function startTimer() {
+            let seconds = 0;
+            document.getElementById('timer').textContent = '0s';
+            timerInterval = setInterval(() => {
+                seconds++;
+                document.getElementById('timer').textContent = seconds + 's';
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function getTagClass(value) {
+            const map = {
+                'working': 'tag-working',
+                'placeholder': 'tag-placeholder',
+                'partial': 'tag-partial',
+                'vibe_code_miss': 'tag-vibe-code-miss',
+                'needs_pm_decision': 'tag-needs-pm-decision',
+                'needs_engineer': 'tag-needs-engineer',
+                'needs_designer': 'tag-needs-designer'
+            };
+            return map[value] || '';
+        }
+
+        function getDoorTag(doorType) {
+            if (!doorType) return '';
+            if (doorType.includes('one-way')) return '<span class="tag tag-one-way">one-way door</span> ';
+            if (doorType.includes('two-way')) return '<span class="tag tag-two-way">two-way door</span> ';
+            return '';
+        }
+
+        function formatReason(reason) {
+            const map = {
+                'needs_pm_decision': 'Needs PM decision',
+                'vibe_code_miss': 'Vibe code miss',
+                'needs_engineer': 'Needs engineer',
+                'needs_designer': 'Needs designer'
+            };
+            return map[reason] || reason;
+        }
+
+        function formatAction(action) {
+            const map = {
+                'build_with_vibe_code': 'Build with vibe code',
+                'build_with_engineer': 'Build with engineer',
+                'build_with_designer': 'Build with designer',
+                'pm_decision_needed': 'PM decision needed'
+            };
+            return map[action] || action;
+        }
+
+        function saveToHistory(projectName, result) {
+            let history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            history.unshift({
+                project: projectName,
+                date: new Date().toISOString(),
+                result: result
+            });
+            if (history.length > 50) history = history.slice(0, 50);
+            localStorage.setItem('vci_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            const filter = document.getElementById('historyFilter').value;
+            const list = document.getElementById('historyList');
+            const suggestions = document.getElementById('projectSuggestions');
+
+            // Update project filter dropdown
+            const projects = [...new Set(history.map(h => h.project).filter(Boolean))];
+            const filterOptions = '<option value="all">All projects</option>' + projects.map(p => `<option value="${p}"${filter === p ? ' selected' : ''}>${p}</option>`).join('');
+            document.getElementById('historyFilter').innerHTML = filterOptions;
+
+            // Update datalist suggestions
+            suggestions.innerHTML = projects.map(p => `<option value="${p}">`).join('');
+
+            // Filter and render
+            const filtered = filter === 'all' ? history : history.filter(h => h.project === filter);
+            list.innerHTML = filtered.map((h, i) => {
+                const date = new Date(h.date).toLocaleDateString();
+                return `<div class="history-item" onclick="loadHistory(${i})">${h.project || 'Unnamed'} — ${date}</div>`;
+            }).join('');
+        }
+
+        function loadHistory(index) {
+            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            if (history[index]) {
+                renderResults(history[index].result);
+            }
+        }
+
+        function renderResults(data) {
+            document.getElementById('results').style.display = 'block';
+
+            // Assessment
+            document.getElementById('assessmentStats').innerHTML =
+                `${data.assessment.features_built} features from doc/prompt built  |  ${data.assessment.features_not_built} features from doc/prompt not built`;
+            document.getElementById('costEstimate').innerHTML =
+                `<strong>Cost estimate:</strong> ${data.assessment.cost_estimate}`;
+
+            // What exists in product
+            const builtBody = document.querySelector('#builtTable tbody');
+            builtBody.innerHTML = data.what_was_built.map(item => `
+                <tr>
+                    <td>
+                        <strong>${item.feature}</strong>
+                        ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
+                    </td>
+                    <td>${item.description}</td>
+                    <td><span class="tag ${getTagClass(item.status)}">${item.status}</span></td>
+                    <td>${item.other_potential_options ? `<span class="other-options">${item.other_potential_options}</span>` : '—'}</td>
+                </tr>
+            `).join('');
+
+            // What wasn't built
+            const notBuiltBody = document.querySelector('#notBuiltTable tbody');
+            notBuiltBody.innerHTML = data.what_wasnt_built.map(item => `
+                <tr>
+                    <td>
+                        <strong>${item.feature}</strong>
+                        ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
+                    </td>
+                    <td>${item.description}</td>
+                    <td><span class="tag ${getTagClass(item.reason)}">${formatReason(item.reason)}</span></td>
+                    <td>${item.action}</td>
+                </tr>
+            `).join('');
+
+            // Plan to build tables
+            renderPlanTable('demoTable', data.plan_to_build.shareable_demo || []);
+            renderPlanTable('betaTable', data.plan_to_build.beta || []);
+            renderPlanTable('finalTable', data.plan_to_build.final_product || []);
+        }
+
+        function renderPlanTable(tableId, items) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>${getDoorTag(item.door_type)}<strong>${item.feature}</strong></td>
+                    <td>${item.description}</td>
+                    <td><span class="tag">${formatAction(item.action)}</span></td>
+                    <td>${item.effort}</td>
+                    <td>${item.other_options ? `<span class="other-options">${item.other_options}</span>` : '—'}</td>
+                </tr>
+            `).join('');
         }
 
         async function analyze() {
-            var strategy = document.getElementById('strategy').value;
-            var codebase = document.getElementById('codebase').value;
-            var design_principles = document.getElementById('design_principles') ? document.getElementById('design_principles').value : '';
-            var btn = document.getElementById('analyzeBtn');
-            var timer = document.getElementById('timer');
-            var results = document.getElementById('results');
+            const strategy = document.getElementById('strategy').value;
+            const codebase = document.getElementById('codebase').value;
+            const designPrinciples = document.getElementById('designPrinciples').value;
+            const projectName = document.getElementById('projectName').value;
 
-            var project_name = document.getElementById('projectName').value.trim();
-            if (!project_name) { alert('Please enter a project name.'); return; }
-            if (!codebase) { alert('Please paste your code.'); return; }
+            if (!codebase) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Please paste your codebase.';
+                return;
+            }
 
-            btn.disabled = true; btn.textContent = 'Analyzing...';
-            results.style.display = 'none'; timer.style.display = 'block';
-
-            var seconds = 0;
-            var interval = setInterval(function() { seconds++; timer.textContent = 'Analyzing your prototype... ' + seconds + 's'; }, 1000);
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            startTimer();
 
             try {
-                var response = await fetch('/analyze', {
+                const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ strategy: strategy, codebase: codebase, design_principles: design_principles, project_name: project_name })
+                    body: JSON.stringify({ strategy, codebase, design_principles: designPrinciples })
                 });
-                var data = await response.json();
-                clearInterval(interval); timer.style.display = 'none';
-                btn.disabled = false; btn.textContent = 'Analyze';
 
-                if (data.error) { alert('Analysis failed\n\n' + data.error); return; }
+                stopTimer();
+                document.getElementById('loading').style.display = 'none';
 
-                loadProjects();
-                loadHistory(document.getElementById('historyFilter').value);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Analysis failed');
+                }
 
-                results.style.display = 'block';
-                renderResults(data, data._project_name || project_name);
+                const data = await response.json();
+                renderResults(data);
+                saveToHistory(projectName, data);
 
             } catch (err) {
-                clearInterval(interval); timer.style.display = 'none';
-                btn.disabled = false; btn.textContent = 'Analyze';
-                alert('Something went wrong. Please try again.');
+                stopTimer();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Analysis failed: ' + err.message;
             }
         }
 
-        function renderResults(data, projectLabel) {
-            // Project Name
-            document.getElementById('result-project-name').innerHTML = '<h2 style="margin:0;color:#333;">' + projectLabel + '</h2>';
-
-            // Assessment — just counts + cost
-            var a = data.assessment;
-            document.getElementById('assessment-section').innerHTML =
-                '<h2 style="margin-top:0; font-size: 18px;">Assessment</h2>' +
-                '<p style="font-size: 16px; margin: 0;">' +
-                '<strong style="color:#2e7d32;">' + a.built_count + '</strong> features from doc/prompt built &nbsp;&nbsp;|&nbsp;&nbsp; ' +
-                '<strong style="color:#c62828;">' + a.missed_count + '</strong> features from doc/prompt not built</p>' +
-                '<p style="font-size:16px;margin-top:8px;color:#333;">Cost to final product: ' + (a.cost_estimate || 'N/A') + '</p>';
-
-            // What was built — TABLE
-            var builtHTML = '<h2 style="margin-top:0; font-size: 18px;">What was built</h2>';
-            if (data.what_was_built && data.what_was_built.length > 0) {
-                builtHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
-                builtHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">What exists in product</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Call-out, other options</th></tr>';
-                
-                var builtItems = data.what_was_built;
-                var builtShowCount = Math.min(builtItems.length, 5);
-                
-                for (var i = 0; i < builtItems.length; i++) {
-                    var item = builtItems[i];
-                    var sourceTag = item.source === 'from_doc_prompt' ?
-                        '<span style="background:#e8f5e9;padding:1px 6px;border-radius:8px;font-size:11px;">from doc/prompt</span>' :
-                        '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">vibe code addition</span>';
-                    var hideStyle = i >= builtShowCount ? ' style="display:none;" class="built-extra"' : '';
-                    
-                    // Format callout and other_options — other_options in smaller font
-                    var calloutContent = item.callout || '';
-                    var otherOptions = item.other_options || '';
-                    var combinedContent = '<span style="font-size:14px;">' + calloutContent + '</span>';
-                    if (otherOptions) {
-                        combinedContent += '<br><br><span style="font-size:12px;color:#666;"><strong>Other options:</strong> ' + otherOptions + '</span>';
-                    }
-                    
-                    builtHTML += '<tr' + hideStyle + '><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        '<strong>' + item.feature + '</strong> ' + sourceTag +
-                        (item.doc_reference ? '<br><em style="color:#666;font-size:12px;">"' + item.doc_reference + '"</em>' : '') +
-                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        (item.what_exists_in_product || '') +
-                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        combinedContent +
-                        '</td></tr>';
-                }
-                builtHTML += '</table>';
-                
-                if (builtItems.length > builtShowCount) {
-                    builtHTML += '<p onclick="toggleBuiltExtra()" style="cursor:pointer;color:#2563eb;font-size:13px;margin-top:8px;" id="built-toggle">Show ' + (builtItems.length - builtShowCount) + ' more &#9660;</p>';
-                }
-            }
-            document.getElementById('built-section').innerHTML = builtHTML;
-
-            // What wasn't built — TABLE
-            var missedHTML = '<h2 style="margin-top:0; font-size: 18px;">What wasn\'t built</h2>';
-            if (data.what_wasnt_built && data.what_wasnt_built.length > 0) {
-                missedHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
-                missedHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Call-out</th><th style="text-align:left;padding:10px;border-bottom:2px solid #ddd;">Action</th></tr>';
-                
-                var missedItems = data.what_wasnt_built;
-                var missedShowCount = Math.min(missedItems.length, 5);
-                
-                for (var j = 0; j < missedItems.length; j++) {
-                    var mItem = missedItems[j];
-                    var reasonTag = '';
-                    if (mItem.reason === 'vibe_code_miss') reasonTag = '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">vibe code miss</span>';
-                    else if (mItem.reason === 'needs_your_input') reasonTag = '<span style="background:#e3f2fd;padding:1px 6px;border-radius:8px;font-size:11px;">needs your input</span>';
-                    else reasonTag = '<span style="background:#fce4ec;padding:1px 6px;border-radius:8px;font-size:11px;">vibe coding limitation</span>';
-                    
-                    var mHideStyle = j >= missedShowCount ? ' style="display:none;" class="missed-extra"' : '';
-                    
-                    missedHTML += '<tr' + mHideStyle + '><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        '<strong>' + mItem.feature + '</strong>' +
-                        (mItem.doc_reference ? '<br><em style="color:#666;font-size:12px;">"' + mItem.doc_reference + '"</em>' : '') +
-                        '<br>' + reasonTag +
-                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        (mItem.callout || '—') +
-                        '</td><td style="padding:10px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                        mItem.action +
-                        '</td></tr>';
-                }
-                missedHTML += '</table>';
-                
-                if (missedItems.length > missedShowCount) {
-                    missedHTML += '<p onclick="toggleMissedExtra()" style="cursor:pointer;color:#2563eb;font-size:13px;margin-top:8px;" id="missed-toggle">Show ' + (missedItems.length - missedShowCount) + ' more &#9660;</p>';
-                }
-            }
-            document.getElementById('missed-section').innerHTML = missedHTML;
-
-            // Plan to build — THREE TABLES
-            var planHTML = '<h2 style="margin-top:0; font-size: 18px;">Plan to build</h2>';
-            if (data.plan_to_build) {
-                var stages = [
-                    { key: 'shareable_demo', label: 'Shareable demo' },
-                    { key: 'beta', label: 'Beta' },
-                    { key: 'final_product', label: 'Final product' }
-                ];
-                
-                stages.forEach(function(stage) {
-                    var items = data.plan_to_build[stage.key];
-                    if (items && items.length > 0) {
-                        planHTML += '<h3 style="font-size:16px;margin-bottom:8px;margin-top:20px;">' + stage.label + '</h3>';
-                        planHTML += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
-                        planHTML += '<tr style="background:#f8f9fa;"><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Feature</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Description</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Action</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ddd;">Effort</th></tr>';
-                        
-                        items.forEach(function(pItem) {
-                            var doorTag = pItem.door_type === 'one_way' ?
-                                '<span style="background:#ffebee;padding:1px 6px;border-radius:8px;font-size:11px;">one-way door</span>' :
-                                '<span style="background:#e8f5e9;padding:1px 6px;border-radius:8px;font-size:11px;">two-way door</span>';
-                            
-                            var actionTag = '';
-                            if (pItem.action === 're-prompt') actionTag = '<span style="background:#fff3e0;padding:1px 6px;border-radius:8px;font-size:11px;">re-prompt</span>';
-                            else if (pItem.action === 'needs_your_input') actionTag = '<span style="background:#e3f2fd;padding:1px 6px;border-radius:8px;font-size:11px;">needs your input</span>';
-                            else if (pItem.action === 'needs_engineering') actionTag = '<span style="background:#fce4ec;padding:1px 6px;border-radius:8px;font-size:11px;">needs engineering</span>';
-                            else if (pItem.action === 'needs_designer') actionTag = '<span style="background:#f3e5f5;padding:1px 6px;border-radius:8px;font-size:11px;">needs designer</span>';
-                            else actionTag = pItem.action;
-                            
-                            planHTML += '<tr><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                                '<strong>' + pItem.feature + '</strong> ' + doorTag +
-                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                                pItem.description +
-                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                                actionTag +
-                                '</td><td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top;">' +
-                                pItem.effort +
-                                '</td></tr>';
-                        });
-                        planHTML += '</table>';
-                    }
-                });
-            }
-            document.getElementById('plan-section').innerHTML = planHTML;
-        }
-
-        function toggleBuiltExtra() {
-            var extras = document.querySelectorAll('.built-extra');
-            var toggle = document.getElementById('built-toggle');
-            var showing = extras[0] && extras[0].style.display !== 'none';
-            extras.forEach(function(el) { el.style.display = showing ? 'none' : 'table-row'; });
-            toggle.innerHTML = showing ? 'Show ' + extras.length + ' more &#9660;' : 'Show less &#9650;';
-        }
-
-        function toggleMissedExtra() {
-            var extras = document.querySelectorAll('.missed-extra');
-            var toggle = document.getElementById('missed-toggle');
-            var showing = extras[0] && extras[0].style.display !== 'none';
-            extras.forEach(function(el) { el.style.display = showing ? 'none' : 'table-row'; });
-            toggle.innerHTML = showing ? 'Show ' + extras.length + ' more &#9660;' : 'Show less &#9650;';
-        }
+        // Load history on page load
+        document.getElementById('historyFilter').addEventListener('change', renderHistory);
+        renderHistory();
     </script>
 </body>
 </html>
