@@ -15,20 +15,18 @@
 
         .container { display: flex; height: calc(100vh - 80px); }
         
-        /* Sidebar */
         .sidebar { width: 250px; background: white; border-right: 1px solid #e0e0e0; padding: 20px; overflow-y: auto; }
         .sidebar h3 { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
         .sidebar select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 16px; font-size: 0.85rem; }
         .history-item { padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 6px; font-size: 0.85rem; }
         .history-item:hover { background: #f0f0f0; }
-        .history-item .history-time { font-size: 0.75rem; color: #999; margin-top: 2px; }
+        .history-time { font-size: 0.75rem; color: #999; margin-top: 2px; }
 
-        /* Main content */
         .main { flex: 1; padding: 30px 40px; overflow-y: auto; max-width: 1200px; }
         
         .input-section { margin-bottom: 24px; }
         .input-section label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; }
-        .input-section .required { color: red; }
+        .required { color: red; }
         .input-section textarea { width: 100%; height: 180px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: vertical; }
         .input-section input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
 
@@ -36,41 +34,43 @@
         .run-btn:hover { background: #15803d; }
         .run-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Output */
         .output { margin-top: 40px; clear: both; }
-        .output h2 { font-size: 1.2rem; margin-bottom: 16px; }
         
         .assessment-box { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 24px; }
-        .assessment-box .counts { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-        .assessment-box .cost { color: #666; font-size: 0.9rem; }
+        .assessment-counts { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .assessment-cost { color: #666; font-size: 0.9rem; }
 
         .section { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
         .section h3 { font-size: 1rem; margin-bottom: 12px; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { text-align: left; padding: 10px; background: #f9f9f9; border-bottom: 2px solid #e0e0e0; }
+        th { text-align: left; padding: 10px; background: #f9f9f9; border-bottom: 2px solid #e0e0e0; font-weight: 600; }
         td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
         
         .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
-        .tag-built { background: #dcfce7; color: #166534; }
         .tag-missed { background: #fef3c7; color: #92400e; }
+        .tag-input { background: #f3e8ff; color: #6b21a8; }
         .tag-engineering { background: #dbeafe; color: #1e40af; }
-        .tag-design { background: #f3e8ff; color: #6b21a8; }
+        .tag-design { background: #fce7f3; color: #9d174d; }
         .tag-two-way { background: #e0f2fe; color: #0369a1; }
         .tag-one-way { background: #fee2e2; color: #991b1b; }
 
         .other-options { font-size: 0.8rem; color: #555; }
+        .doc-ref { font-style: italic; color: #666; font-size: 0.8rem; }
+        .callout { font-size: 0.85rem; color: #444; }
 
         .loading { text-align: center; padding: 40px; color: #666; }
         .timer { font-size: 0.85rem; color: #999; margin-top: 8px; }
         .error { color: #dc2626; padding: 20px; background: #fef2f2; border-radius: 8px; }
 
-        /* Advanced section */
         .advanced-toggle { color: #2563eb; cursor: pointer; font-size: 0.85rem; margin-bottom: 12px; display: inline-block; }
         .advanced-section { display: none; margin-bottom: 24px; }
         .advanced-section.show { display: block; }
         .advanced-section textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: vertical; }
         .advanced-section label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.85rem; }
+
+        .plan-stage { margin-top: 16px; }
+        .plan-stage h4 { font-size: 0.9rem; margin-bottom: 8px; color: #333; }
     </style>
 </head>
 <body>
@@ -85,7 +85,7 @@
     <div class="container">
         <div class="sidebar">
             <h3>History</h3>
-            <select id="historyFilter">
+            <select id="historyFilter" onchange="loadHistory()">
                 <option value="all">All projects</option>
             </select>
             <div id="historyList"></div>
@@ -107,7 +107,7 @@
                 <textarea id="codebase" placeholder="Paste the code that was generated by the vibe coding tool..."></textarea>
             </div>
 
-            <span class="advanced-toggle" onclick="toggleAdvanced()">▶ Advanced: Design principles</span>
+            <span class="advanced-toggle" onclick="toggleAdvanced()">&#9654; Advanced: Design principles</span>
             <div class="advanced-section" id="advancedSection">
                 <label>Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.</label>
                 <textarea id="designPrinciples" placeholder="e.g., We prioritize accessibility, mobile-first design, progressive disclosure..."></textarea>
@@ -126,7 +126,7 @@
             const section = document.getElementById('advancedSection');
             const toggle = document.querySelector('.advanced-toggle');
             section.classList.toggle('show');
-            toggle.textContent = section.classList.contains('show') ? '▼ Advanced: Design principles' : '▶ Advanced: Design principles';
+            toggle.textContent = section.classList.contains('show') ? '\u25BC Advanced: Design principles' : '\u25B6 Advanced: Design principles';
         }
 
         function resetForm() {
@@ -146,20 +146,18 @@
             const list = document.getElementById('historyList');
             const filter = document.getElementById('historyFilter');
             
-            // Update filter dropdown
             const projects = [...new Set(history.map(h => h.name))];
-            filter.innerHTML = '<option value="all">All projects</option>' + projects.map(p => `<option value="${p}">${p}</option>`).join('');
+            filter.innerHTML = '<option value="all">All projects</option>' + projects.map(p => '<option value="' + p + '">' + p + '</option>').join('');
 
-            // Display history items
             const filterVal = filter.value;
             const filtered = filterVal === 'all' ? history : history.filter(h => h.name === filterVal);
             
-            list.innerHTML = filtered.map((item, i) => `
-                <div class="history-item" onclick="loadHistoryItem(${i})">
-                    <div>${item.name}</div>
-                    <div class="history-time">${item.timestamp || 'No date'}</div>
-                </div>
-            `).join('');
+            list.innerHTML = filtered.map(function(item, i) {
+                return '<div class="history-item" onclick="loadHistoryItem(' + i + ')">' +
+                    '<div>' + item.name + '</div>' +
+                    '<div class="history-time">' + (item.timestamp || '') + '</div>' +
+                    '</div>';
+            }).join('');
         }
 
         function saveToHistory(name, result) {
@@ -175,7 +173,9 @@
 
         function loadHistoryItem(index) {
             const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
-            const item = history[index];
+            const filterVal = document.getElementById('historyFilter').value;
+            const filtered = filterVal === 'all' ? history : history.filter(h => h.name === filterVal);
+            const item = filtered[index];
             if (item && item.result) {
                 renderOutput(item.result);
             }
@@ -195,14 +195,14 @@
             
             let seconds = 0;
             document.getElementById('output').innerHTML = '<div class="loading"><p>Analyzing your vibe code...</p><p class="timer">0s</p></div>';
-            timerInterval = setInterval(() => {
+            timerInterval = setInterval(function() {
                 seconds++;
-                const timerEl = document.querySelector('.timer');
+                var timerEl = document.querySelector('.timer');
                 if (timerEl) timerEl.textContent = seconds + 's';
             }, 1000);
 
             try {
-                const body = { codebase, strategy };
+                const body = { codebase: codebase, strategy: strategy };
                 if (designPrinciples) body.design_principles = designPrinciples;
 
                 const response = await fetch('/analyze', {
@@ -215,7 +215,7 @@
 
                 if (!response.ok) {
                     const err = await response.text();
-                    document.getElementById('output').innerHTML = `<div class="error">Analysis failed: ${err}</div>`;
+                    document.getElementById('output').innerHTML = '<div class="error">Analysis failed: ' + err + '</div>';
                     btn.disabled = false;
                     return;
                 }
@@ -236,80 +236,114 @@
 
             } catch (e) {
                 clearInterval(timerInterval);
-                document.getElementById('output').innerHTML = `<div class="error">Something went wrong: ${e.message}</div>`;
+                document.getElementById('output').innerHTML = '<div class="error">Something went wrong: ' + e.message + '</div>';
             }
 
             btn.disabled = false;
         }
 
-        function renderOutput(data) {
-            const assessment = data.assessment || {};
-            const built = data.what_was_built || [];
-            const notBuilt = data.what_wasnt_built || [];
-            const plan = data.plan_to_build || [];
+        function getTagClass(tag) {
+            if (tag === 'missed_in_build') return 'tag-missed';
+            if (tag === 'needs_your_input') return 'tag-input';
+            if (tag === 'needs_engineering') return 'tag-engineering';
+            if (tag === 'needs_design') return 'tag-design';
+            return 'tag-missed';
+        }
 
-            let html = '';
+        function getTagLabel(tag) {
+            if (tag === 'missed_in_build') return 'vibe code miss';
+            if (tag === 'needs_your_input') return 'needs your input';
+            if (tag === 'needs_engineering') return 'needs engineering';
+            if (tag === 'needs_design') return 'needs design';
+            return tag;
+        }
+
+        function getDoorClass(door) {
+            if (door === 'two-way door') return 'tag-two-way';
+            if (door === 'one-way door') return 'tag-one-way';
+            return 'tag-two-way';
+        }
+
+        function renderOutput(data) {
+            var assessment = data.assessment || {};
+            var built = data.what_exists_in_product || [];
+            var notBuilt = data.what_wasnt_built || [];
+            var plan = data.plan_to_build || {};
+
+            var html = '';
 
             // Assessment
-            html += `<div class="assessment-box">
-                <div class="counts">${assessment.built_count || 0} features from doc/prompt built &nbsp;|&nbsp; ${assessment.missed_count || 0} features from doc/prompt not built</div>
-                <div class="cost">Estimated effort to make it a real product: ${assessment.cost_estimate || 'Not estimated'}</div>
-            </div>`;
+            html += '<div class="assessment-box">';
+            html += '<div class="assessment-counts">' + (assessment.features_built || 0) + ' features built &nbsp;|&nbsp; ' + (assessment.features_not_built || 0) + ' features not built</div>';
+            html += '<div class="assessment-cost">Estimated effort to make it a real product: ' + (assessment.cost_estimate || 'Not estimated') + '</div>';
+            html += '</div>';
 
             // What exists in product
             if (built.length > 0) {
-                html += `<div class="section"><h3>What exists in the product</h3><table>
-                    <tr><th>Feature</th><th>Status</th><th>Other options</th></tr>`;
-                built.forEach(item => {
-                    const options = item.other_options ? item.other_options.map((o, i) => `${i+1}. ${o}`).join('<br>') : '—';
-                    html += `<tr>
-                        <td>${item.feature}${item.doc_reference ? '<br><em style="color:#666;font-size:0.8rem;">' + item.doc_reference + '</em>' : ''}</td>
-                        <td><span class="tag tag-built">${item.status || 'working'}</span></td>
-                        <td class="other-options">${options}</td>
-                    </tr>`;
+                html += '<div class="section"><h3>What exists in the product</h3><table>';
+                html += '<tr><th>Feature</th><th>What exists</th><th>Other options</th></tr>';
+                built.forEach(function(item) {
+                    var options = item.other_potential_options || '—';
+                    html += '<tr>';
+                    html += '<td>' + item.feature + (item.reference_from_doc ? '<br><span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '</td>';
+                    html += '<td>' + (item.what_exists || '—') + '</td>';
+                    html += '<td class="other-options">' + options + '</td>';
+                    html += '</tr>';
                 });
-                html += `</table></div>`;
+                html += '</table></div>';
             }
 
             // What wasn't built
             if (notBuilt.length > 0) {
-                html += `<div class="section"><h3>What wasn't built</h3><table>
-                    <tr><th>Feature</th><th>Tag</th><th>Action</th></tr>`;
-                notBuilt.forEach(item => {
-                    const tagClass = item.tag === 'needs_engineering' ? 'tag-engineering' : item.tag === 'needs_design' ? 'tag-design' : 'tag-missed';
-                    const tagLabel = item.tag === 'needs_engineering' ? 'needs engineering' : item.tag === 'needs_design' ? 'needs design' : 'vibe code miss';
-                    const action = (item.tag === 'needs_engineering' || item.tag === 'needs_design') ? 'See plan to build' : (item.action || 'Re-prompt');
-                    html += `<tr>
-                        <td>${item.feature}${item.doc_reference ? '<br><em style="color:#666;font-size:0.8rem;">' + item.doc_reference + '</em>' : ''}</td>
-                        <td><span class="tag ${tagClass}">${tagLabel}</span></td>
-                        <td>${action}</td>
-                    </tr>`;
+                html += '<div class="section"><h3>What wasn\'t built</h3><table>';
+                html += '<tr><th>Feature</th><th>Tag</th><th>Callout</th><th>Action</th></tr>';
+                notBuilt.forEach(function(item) {
+                    html += '<tr>';
+                    html += '<td>' + item.feature + (item.reference_from_doc ? '<br><span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '</td>';
+                    html += '<td><span class="tag ' + getTagClass(item.tag) + '">' + getTagLabel(item.tag) + '</span></td>';
+                    html += '<td class="callout">' + (item.callout || '—') + '</td>';
+                    html += '<td>' + (item.action || '—') + '</td>';
+                    html += '</tr>';
                 });
-                html += `</table></div>`;
+                html += '</table></div>';
             }
 
             // Plan to build
-            if (plan.length > 0) {
-                html += `<div class="section"><h3>Plan to build</h3><table>
-                    <tr><th>Item</th><th>Effort</th><th>Door type</th><th>Other options</th></tr>`;
-                plan.forEach(item => {
-                    const doorClass = item.door_type === 'two-way' ? 'tag-two-way' : 'tag-one-way';
-                    const options = item.other_options ? item.other_options.map((o, i) => `${i+1}. ${o}`).join('<br>') : '—';
-                    html += `<tr>
-                        <td>${item.item}</td>
-                        <td>${item.effort || '—'}</td>
-                        <td><span class="tag ${doorClass}">${item.door_type || '—'}</span></td>
-                        <td class="other-options">${options}</td>
-                    </tr>`;
+            if (plan.shareable_demo || plan.beta || plan.final_product) {
+                html += '<div class="section"><h3>Plan to build</h3>';
+
+                var stages = [
+                    { key: 'shareable_demo', label: 'Shareable demo' },
+                    { key: 'beta', label: 'Beta' },
+                    { key: 'final_product', label: 'Final product' }
+                ];
+
+                stages.forEach(function(stage) {
+                    var items = plan[stage.key] || [];
+                    if (items.length > 0) {
+                        html += '<div class="plan-stage"><h4>' + stage.label + '</h4>';
+                        html += '<table><tr><th>Feature</th><th>Door type</th><th>Action</th><th>Effort</th><th>Other options</th></tr>';
+                        items.forEach(function(item) {
+                            var options = item.other_options || '—';
+                            html += '<tr>';
+                            html += '<td>' + item.feature + (item.callout ? '<br><span class="doc-ref">' + item.callout + '</span>' : '') + '</td>';
+                            html += '<td><span class="tag ' + getDoorClass(item.door_type) + '">' + (item.door_type || '—') + '</span></td>';
+                            html += '<td>' + (item.action || '—') + '</td>';
+                            html += '<td>' + (item.effort || '—') + '</td>';
+                            html += '<td class="other-options">' + options + '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</table></div>';
+                    }
                 });
-                html += `</table></div>`;
+
+                html += '</div>';
             }
 
             document.getElementById('output').innerHTML = html;
         }
 
         // Init
-        document.getElementById('historyFilter').addEventListener('change', loadHistory);
         loadHistory();
     </script>
 </body>
