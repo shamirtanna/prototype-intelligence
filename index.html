@@ -9,7 +9,8 @@
         h1 { margin-bottom: 5px; }
         .tagline { color: #666; margin-bottom: 30px; font-size: 14px; }
         .input-section { display: flex; gap: 15px; margin-bottom: 15px; }
-        .input-section textarea { flex: 1; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .input-group { flex: 1; display: flex; flex-direction: column; }
+        .input-group textarea { flex: 1; min-height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; resize: vertical; }
         .advanced-toggle { cursor: pointer; color: #666; font-size: 13px; margin-bottom: 10px; }
         .advanced-section { display: none; margin-bottom: 15px; }
         .advanced-section textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
@@ -20,7 +21,7 @@
         .analyze-btn { padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
         .analyze-btn:hover { background: #1d4ed8; }
         .button-row { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-        .label { font-size: 13px; font-weight: 500; margin-bottom: 4px; color: #374151; }
+        .label { font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #374151; display: block; }
         .required { color: #dc2626; }
         .loading { display: none; margin: 20px 0; }
         .timer { color: #666; font-size: 13px; margin-top: 5px; }
@@ -78,11 +79,11 @@
         </div>
 
         <div class="input-section">
-            <div style="flex:1;">
+            <div class="input-group">
                 <span class="label">Your product doc or vibe code prompt</span>
                 <textarea id="strategy" placeholder="The plan, what you told the AI to build (optional — leave blank if you only have code)"></textarea>
             </div>
-            <div style="flex:1;">
+            <div class="input-group">
                 <span class="label">Your vibe code product codebase <span class="required">*</span></span>
                 <textarea id="codebase" placeholder="The code that was generated"></textarea>
             </div>
