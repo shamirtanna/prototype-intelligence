@@ -47,7 +47,7 @@
         th { text-align: left; padding: 10px; background: #f9f9f9; border-bottom: 2px solid #e0e0e0; font-weight: 600; }
         td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
         
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; margin-top: 4px; }
         .tag-missed { background: #fef3c7; color: #92400e; }
         .tag-input { background: #f3e8ff; color: #6b21a8; }
         .tag-engineering { background: #dbeafe; color: #1e40af; }
@@ -56,7 +56,7 @@
         .tag-one-way { background: #fee2e2; color: #991b1b; }
 
         .other-options { font-size: 0.8rem; color: #555; }
-        .doc-ref { font-style: italic; color: #666; font-size: 0.8rem; }
+        .doc-ref { font-style: italic; color: #666; font-size: 0.8rem; display: block; margin-top: 2px; }
         .callout { font-size: 0.85rem; color: #444; }
 
         .loading { text-align: center; padding: 40px; color: #666; }
@@ -283,10 +283,10 @@
                 html += '<div class="section"><h3>What exists in the product</h3><table>';
                 html += '<tr><th>Feature</th><th>What exists</th><th>Other options</th></tr>';
                 built.forEach(function(item) {
-                    var options = item.other_potential_options || '—';
+                    var options = item.other_potential_options || '\u2014';
                     html += '<tr>';
-                    html += '<td>' + item.feature + (item.reference_from_doc ? '<br><span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '</td>';
-                    html += '<td>' + (item.what_exists || '—') + '</td>';
+                    html += '<td>' + item.feature + (item.reference_from_doc ? '<span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '</td>';
+                    html += '<td>' + (item.what_exists || '\u2014') + '</td>';
                     html += '<td class="other-options">' + options + '</td>';
                     html += '</tr>';
                 });
@@ -296,13 +296,12 @@
             // What wasn't built
             if (notBuilt.length > 0) {
                 html += '<div class="section"><h3>What wasn\'t built</h3><table>';
-                html += '<tr><th>Feature</th><th>Tag</th><th>Callout</th><th>Action</th></tr>';
+                html += '<tr><th>Feature</th><th>Callout</th><th>Action</th></tr>';
                 notBuilt.forEach(function(item) {
                     html += '<tr>';
-                    html += '<td>' + item.feature + (item.reference_from_doc ? '<br><span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '</td>';
-                    html += '<td><span class="tag ' + getTagClass(item.tag) + '">' + getTagLabel(item.tag) + '</span></td>';
-                    html += '<td class="callout">' + (item.callout || '—') + '</td>';
-                    html += '<td>' + (item.action || '—') + '</td>';
+                    html += '<td>' + item.feature + (item.reference_from_doc ? '<span class="doc-ref">' + item.reference_from_doc + '</span>' : '') + '<br><span class="tag ' + getTagClass(item.tag) + '">' + getTagLabel(item.tag) + '</span></td>';
+                    html += '<td class="callout">' + (item.callout || '\u2014') + '</td>';
+                    html += '<td>' + (item.action || '\u2014') + '</td>';
                     html += '</tr>';
                 });
                 html += '</table></div>';
@@ -322,14 +321,14 @@
                     var items = plan[stage.key] || [];
                     if (items.length > 0) {
                         html += '<div class="plan-stage"><h4>' + stage.label + '</h4>';
-                        html += '<table><tr><th>Feature</th><th>Door type</th><th>Action</th><th>Effort</th><th>Other options</th></tr>';
+                        html += '<table><tr><th>Feature</th><th>Callout</th><th>Action</th><th>Effort</th><th>Other options</th></tr>';
                         items.forEach(function(item) {
-                            var options = item.other_options || '—';
+                            var options = item.other_options || '\u2014';
                             html += '<tr>';
-                            html += '<td>' + item.feature + (item.callout ? '<br><span class="doc-ref">' + item.callout + '</span>' : '') + '</td>';
-                            html += '<td><span class="tag ' + getDoorClass(item.door_type) + '">' + (item.door_type || '—') + '</span></td>';
-                            html += '<td>' + (item.action || '—') + '</td>';
-                            html += '<td>' + (item.effort || '—') + '</td>';
+                            html += '<td>' + item.feature + '<br><span class="tag ' + getDoorClass(item.door_type) + '">' + (item.door_type || '\u2014') + '</span></td>';
+                            html += '<td class="callout">' + (item.callout || '\u2014') + '</td>';
+                            html += '<td>' + (item.action || '\u2014') + '</td>';
+                            html += '<td>' + (item.effort || '\u2014') + '</td>';
                             html += '<td class="other-options">' + options + '</td>';
                             html += '</tr>';
                         });
