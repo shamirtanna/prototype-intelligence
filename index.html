@@ -32,20 +32,19 @@
         .cost-estimate { background: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; }
         .section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .section h3 { margin-top: 0; }
+        .section h4 { margin-top: 20px; margin-bottom: 10px; color: #374151; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; font-weight: 600; }
         td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-        .tag-working { background: #dcfce7; color: #166534; }
-        .tag-placeholder { background: #fef9c3; color: #854d0e; }
-        .tag-partial { background: #ffe4e6; color: #9f1239; }
-        .tag-vibe-code-miss { background: #fecaca; color: #991b1b; }
-        .tag-needs-pm-decision { background: #e0e7ff; color: #3730a3; }
-        .tag-needs-engineer { background: #f3e8ff; color: #6b21a8; }
-        .tag-needs-designer { background: #fce7f3; color: #9d174d; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-right: 4px; }
+        .tag-missed { background: #fecaca; color: #991b1b; }
+        .tag-input { background: #e0e7ff; color: #3730a3; }
+        .tag-engineering { background: #f3e8ff; color: #6b21a8; }
+        .tag-design { background: #fce7f3; color: #9d174d; }
         .tag-one-way { background: #fee2e2; color: #991b1b; }
         .tag-two-way { background: #d1fae5; color: #065f46; }
         .reference { font-style: italic; color: #666; font-size: 12px; }
+        .callout { color: #374151; font-size: 12px; margin-top: 4px; line-height: 1.4; }
         .other-options { color: #555; font-size: 12px; margin-top: 4px; }
         .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: white; border-right: 1px solid #e2e8f0; padding: 20px; overflow-y: auto; }
         .sidebar h4 { margin-top: 0; }
@@ -120,8 +119,7 @@
                     <thead>
                         <tr>
                             <th>Feature</th>
-                            <th>Description</th>
-                            <th>Status</th>
+                            <th>What exists in the product</th>
                             <th>Other options</th>
                         </tr>
                     </thead>
@@ -136,8 +134,7 @@
                     <thead>
                         <tr>
                             <th>Feature</th>
-                            <th>Description</th>
-                            <th>Reason</th>
+                            <th>Callout</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -152,8 +149,8 @@
                 <table id="demoTable">
                     <thead>
                         <tr>
-                            <th>Feature</th>
-                            <th>Description</th>
+                            <th>Item</th>
+                            <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
                             <th>Other options</th>
@@ -166,8 +163,8 @@
                 <table id="betaTable">
                     <thead>
                         <tr>
-                            <th>Feature</th>
-                            <th>Description</th>
+                            <th>Item</th>
+                            <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
                             <th>Other options</th>
@@ -180,8 +177,8 @@
                 <table id="finalTable">
                     <thead>
                         <tr>
-                            <th>Feature</th>
-                            <th>Description</th>
+                            <th>Item</th>
+                            <th>Callout</th>
                             <th>Action</th>
                             <th>Effort</th>
                             <th>Other options</th>
@@ -230,17 +227,24 @@
             clearInterval(timerInterval);
         }
 
-        function getTagClass(value) {
+        function getTagClass(tag) {
             const map = {
-                'working': 'tag-working',
-                'placeholder': 'tag-placeholder',
-                'partial': 'tag-partial',
-                'vibe_code_miss': 'tag-vibe-code-miss',
-                'needs_pm_decision': 'tag-needs-pm-decision',
-                'needs_engineer': 'tag-needs-engineer',
-                'needs_designer': 'tag-needs-designer'
+                'missed_in_build': 'tag-missed',
+                'needs_your_input': 'tag-input',
+                'needs_engineering': 'tag-engineering',
+                'needs_design': 'tag-design'
             };
-            return map[value] || '';
+            return map[tag] || '';
+        }
+
+        function formatTag(tag) {
+            const map = {
+                'missed_in_build': 'Missed — re-run',
+                'needs_your_input': 'Needs your input',
+                'needs_engineering': 'Needs engineering',
+                'needs_design': 'Needs design'
+            };
+            return map[tag] || tag;
         }
 
         function getDoorTag(doorType) {
@@ -248,26 +252,6 @@
             if (doorType.includes('one-way')) return '<span class="tag tag-one-way">one-way door</span> ';
             if (doorType.includes('two-way')) return '<span class="tag tag-two-way">two-way door</span> ';
             return '';
-        }
-
-        function formatReason(reason) {
-            const map = {
-                'needs_pm_decision': 'Needs PM decision',
-                'vibe_code_miss': 'Vibe code miss',
-                'needs_engineer': 'Needs engineer',
-                'needs_designer': 'Needs designer'
-            };
-            return map[reason] || reason;
-        }
-
-        function formatAction(action) {
-            const map = {
-                'build_with_vibe_code': 'Build with vibe code',
-                'build_with_engineer': 'Build with engineer',
-                'build_with_designer': 'Build with designer',
-                'pm_decision_needed': 'PM decision needed'
-            };
-            return map[action] || action;
         }
 
         function saveToHistory(projectName, result) {
@@ -288,15 +272,12 @@
             const list = document.getElementById('historyList');
             const suggestions = document.getElementById('projectSuggestions');
 
-            // Update project filter dropdown
             const projects = [...new Set(history.map(h => h.project).filter(Boolean))];
             const filterOptions = '<option value="all">All projects</option>' + projects.map(p => `<option value="${p}"${filter === p ? ' selected' : ''}>${p}</option>`).join('');
             document.getElementById('historyFilter').innerHTML = filterOptions;
 
-            // Update datalist suggestions
             suggestions.innerHTML = projects.map(p => `<option value="${p}">`).join('');
 
-            // Filter and render
             const filtered = filter === 'all' ? history : history.filter(h => h.project === filter);
             list.innerHTML = filtered.map((h, i) => {
                 const date = new Date(h.date).toLocaleDateString();
@@ -322,14 +303,13 @@
 
             // What exists in product
             const builtBody = document.querySelector('#builtTable tbody');
-            builtBody.innerHTML = data.what_was_built.map(item => `
+            builtBody.innerHTML = data.what_exists_in_product.map(item => `
                 <tr>
                     <td>
                         <strong>${item.feature}</strong>
                         ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
                     </td>
-                    <td>${item.description}</td>
-                    <td><span class="tag ${getTagClass(item.status)}">${item.status}</span></td>
+                    <td>${item.what_exists}</td>
                     <td>${item.other_potential_options ? `<span class="other-options">${item.other_potential_options}</span>` : '—'}</td>
                 </tr>
             `).join('');
@@ -341,9 +321,9 @@
                     <td>
                         <strong>${item.feature}</strong>
                         ${item.reference_from_doc ? `<br><span class="reference">${item.reference_from_doc}</span>` : ''}
+                        <br><span class="tag ${getTagClass(item.tag)}">${formatTag(item.tag)}</span>
                     </td>
-                    <td>${item.description}</td>
-                    <td><span class="tag ${getTagClass(item.reason)}">${formatReason(item.reason)}</span></td>
+                    <td><span class="callout">${item.callout}</span></td>
                     <td>${item.action}</td>
                 </tr>
             `).join('');
@@ -358,9 +338,9 @@
             const tbody = document.querySelector(`#${tableId} tbody`);
             tbody.innerHTML = items.map(item => `
                 <tr>
-                    <td>${getDoorTag(item.door_type)}<strong>${item.feature}</strong></td>
-                    <td>${item.description}</td>
-                    <td><span class="tag">${formatAction(item.action)}</span></td>
+                    <td><strong>${item.feature}</strong> ${getDoorTag(item.door_type)}</td>
+                    <td><span class="callout">${item.callout}</span></td>
+                    <td>${item.action}</td>
                     <td>${item.effort}</td>
                     <td>${item.other_options ? `<span class="other-options">${item.other_options}</span>` : '—'}</td>
                 </tr>
@@ -417,7 +397,6 @@
             }
         }
 
-        // Load history on page load
         document.getElementById('historyFilter').addEventListener('change', renderHistory);
         renderHistory();
     </script>
