@@ -4,191 +4,118 @@
 <head>
     <title>Vibe Code Intelligence</title>
     <style>
-        * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { max-width: 900px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
-        h1 { margin-bottom: 5px; }
-        .tagline { color: #666; margin-bottom: 30px; font-size: 14px; }
-        .input-section { display: flex; gap: 15px; margin-bottom: 15px; }
-        .input-group { flex: 1; display: flex; flex-direction: column; }
-        .input-group textarea { flex: 1; min-height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; resize: vertical; }
-        .advanced-toggle { cursor: pointer; color: #666; font-size: 13px; margin-bottom: 10px; }
-        .advanced-section { display: none; margin-bottom: 15px; }
-        .advanced-section textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .project-name-input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; width: 250px; }
-        .new-btn { padding: 8px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
-        .new-btn:hover { background: #e2e8f0; }
-        .analyze-btn { padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
-        .analyze-btn:hover { background: #1d4ed8; }
-        .button-row { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-        .label { font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #374151; display: block; }
-        .required { color: #dc2626; }
-        .loading { display: none; margin: 20px 0; }
-        .timer { color: #666; font-size: 13px; margin-top: 5px; }
-        .results { margin-top: 30px; }
-        .assessment-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .assessment-box h2 { margin-top: 0; font-size: 18px; }
-        .assessment-stats { font-size: 16px; margin: 10px 0; }
-        .cost-estimate { background: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; }
-        .section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .section h3 { margin-top: 0; font-size: 16px; }
-        .section h4 { margin-top: 20px; margin-bottom: 10px; color: #374151; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; font-weight: 600; font-size: 13px; }
-        td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; font-size: 13px; font-weight: normal; }
-        .feature-name { font-weight: 600; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-top: 4px; }
-        .tag-missed { background: #fecaca; color: #991b1b; }
-        .tag-input { background: #e0e7ff; color: #3730a3; }
-        .tag-engineering { background: #f3e8ff; color: #6b21a8; }
-        .tag-design { background: #fce7f3; color: #9d174d; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        
+        .header { background: white; padding: 20px 40px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.4rem; }
+        .header p { color: #666; font-size: 0.85rem; margin-top: 4px; }
+        .new-btn { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .new-btn:hover { background: #1d4ed8; }
+
+        .container { display: flex; height: calc(100vh - 80px); }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background: white; border-right: 1px solid #e0e0e0; padding: 20px; overflow-y: auto; }
+        .sidebar h3 { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
+        .sidebar select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 16px; font-size: 0.85rem; }
+        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 6px; font-size: 0.85rem; }
+        .history-item:hover { background: #f0f0f0; }
+        .history-item .history-time { font-size: 0.75rem; color: #999; margin-top: 2px; }
+
+        /* Main content */
+        .main { flex: 1; padding: 30px 40px; overflow-y: auto; max-width: 1200px; }
+        
+        .input-section { margin-bottom: 24px; }
+        .input-section label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; }
+        .input-section .required { color: red; }
+        .input-section textarea { width: 100%; height: 180px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: vertical; }
+        .input-section input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+
+        .run-btn { background: #16a34a; color: white; border: none; padding: 12px 28px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; float: right; }
+        .run-btn:hover { background: #15803d; }
+        .run-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Output */
+        .output { margin-top: 40px; clear: both; }
+        .output h2 { font-size: 1.2rem; margin-bottom: 16px; }
+        
+        .assessment-box { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 24px; }
+        .assessment-box .counts { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .assessment-box .cost { color: #666; font-size: 0.9rem; }
+
+        .section { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        .section h3 { font-size: 1rem; margin-bottom: 12px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 10px; background: #f9f9f9; border-bottom: 2px solid #e0e0e0; }
+        td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+        
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .tag-built { background: #dcfce7; color: #166534; }
+        .tag-missed { background: #fef3c7; color: #92400e; }
+        .tag-engineering { background: #dbeafe; color: #1e40af; }
+        .tag-design { background: #f3e8ff; color: #6b21a8; }
+        .tag-two-way { background: #e0f2fe; color: #0369a1; }
         .tag-one-way { background: #fee2e2; color: #991b1b; }
-        .tag-two-way { background: #d1fae5; color: #065f46; }
-        .reference { font-style: italic; color: #666; font-size: 12px; }
-        .callout { font-size: 13px; line-height: 1.4; }
-        .other-options { font-size: 13px; line-height: 1.6; white-space: pre-line; }
-        .options-col { width: 30%; }
-        .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: white; border-right: 1px solid #e2e8f0; padding: 20px; overflow-y: auto; }
-        .sidebar h4 { margin-top: 0; }
-        .sidebar select { width: 100%; padding: 6px; margin-bottom: 10px; font-size: 13px; }
-        .sidebar .history-item { padding: 8px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; }
-        .sidebar .history-item:hover { background: #f8fafc; }
-        .main-content { margin-left: 260px; }
-        .error { color: #dc2626; background: #fef2f2; padding: 12px; border-radius: 6px; margin-top: 15px; }
+
+        .other-options { font-size: 0.8rem; color: #555; }
+
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .timer { font-size: 0.85rem; color: #999; margin-top: 8px; }
+        .error { color: #dc2626; padding: 20px; background: #fef2f2; border-radius: 8px; }
+
+        /* Advanced section */
+        .advanced-toggle { color: #2563eb; cursor: pointer; font-size: 0.85rem; margin-bottom: 12px; display: inline-block; }
+        .advanced-section { display: none; margin-bottom: 24px; }
+        .advanced-section.show { display: block; }
+        .advanced-section textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: vertical; }
+        .advanced-section label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h4>History</h4>
-        <select id="historyFilter">
-            <option value="all">All projects</option>
-        </select>
-        <div id="historyList"></div>
+    <div class="header">
+        <div>
+            <h1>Vibe Code Intelligence</h1>
+            <p>See where AI made decisions. Know where your judgment matters. Get a plan to make it a real product.</p>
+        </div>
+        <button class="new-btn" onclick="resetForm()">+ New</button>
     </div>
 
-    <div class="main-content">
-        <h1>Vibe Code Intelligence</h1>
-        <p class="tagline">See where AI made decisions. Know where your judgment matters. Get a plan to make it a real product.</p>
-
-        <div class="top-bar">
-            <div>
-                <span class="label">Project name <span class="required">*</span></span>
-                <input type="text" class="project-name-input" id="projectName" placeholder="Enter or select a project" list="projectSuggestions">
-                <datalist id="projectSuggestions"></datalist>
-            </div>
-            <button class="new-btn" onclick="resetForm()">+ New</button>
+    <div class="container">
+        <div class="sidebar">
+            <h3>History</h3>
+            <select id="historyFilter">
+                <option value="all">All projects</option>
+            </select>
+            <div id="historyList"></div>
         </div>
 
-        <div class="input-section">
-            <div class="input-group">
-                <span class="label">Your product doc or vibe code prompt</span>
-                <textarea id="strategy" placeholder="The plan, what you told the AI to build (optional — leave blank if you only have code)"></textarea>
-            </div>
-            <div class="input-group">
-                <span class="label">Your vibe code product codebase <span class="required">*</span></span>
-                <textarea id="codebase" placeholder="The code that was generated"></textarea>
-            </div>
-        </div>
-
-        <div class="advanced-toggle" onclick="toggleAdvanced()">▶ Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.</div>
-        <div class="advanced-section" id="advancedSection">
-            <textarea id="designPrinciples" placeholder="Design principles, engineering estimation methods, or other context..."></textarea>
-        </div>
-
-        <div class="button-row">
-            <button class="analyze-btn" onclick="analyze()">Analyze</button>
-        </div>
-
-        <div class="loading" id="loading">
-            <p>Analyzing your vibe code...</p>
-            <p class="timer" id="timer">0s</p>
-        </div>
-
-        <div class="error" id="error" style="display:none;"></div>
-
-        <div class="results" id="results" style="display:none;">
-            <!-- Assessment -->
-            <div class="assessment-box">
-                <h2>Assessment</h2>
-                <div class="assessment-stats" id="assessmentStats"></div>
-                <div class="cost-estimate" id="costEstimate"></div>
+        <div class="main">
+            <div class="input-section">
+                <label>Project name <span class="required">*</span></label>
+                <input type="text" id="projectName" placeholder="Project name (required)" />
             </div>
 
-            <!-- What exists in product -->
-            <div class="section">
-                <h3>What exists in product</h3>
-                <table id="builtTable">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>What exists in the product</th>
-                            <th class="options-col">Other options</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div class="input-section">
+                <label>Product doc or vibe code prompt</label>
+                <textarea id="strategy" placeholder="Paste your product doc, working backwards doc, or the prompts you gave to the vibe coding tool..."></textarea>
             </div>
 
-            <!-- What wasn't built -->
-            <div class="section">
-                <h3>What wasn't built</h3>
-                <table id="notBuiltTable">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Callout</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div class="input-section">
+                <label>Your vibe code product codebase <span class="required">*</span></label>
+                <textarea id="codebase" placeholder="Paste the code that was generated by the vibe coding tool..."></textarea>
             </div>
 
-            <!-- Plan to build -->
-            <div class="section">
-                <h3>Plan to build</h3>
-                <h4>Shareable demo</h4>
-                <table id="demoTable">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Callout</th>
-                            <th>Action</th>
-                            <th>Effort</th>
-                            <th class="options-col">Other options</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-
-                <h4>Beta</h4>
-                <table id="betaTable">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Callout</th>
-                            <th>Action</th>
-                            <th>Effort</th>
-                            <th class="options-col">Other options</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-
-                <h4>Final product</h4>
-                <table id="finalTable">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Callout</th>
-                            <th>Action</th>
-                            <th>Effort</th>
-                            <th class="options-col">Other options</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <span class="advanced-toggle" onclick="toggleAdvanced()">▶ Advanced: Design principles</span>
+            <div class="advanced-section" id="advancedSection">
+                <label>Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.</label>
+                <textarea id="designPrinciples" placeholder="e.g., We prioritize accessibility, mobile-first design, progressive disclosure..."></textarea>
             </div>
+
+            <button class="run-btn" id="runBtn" onclick="runAnalysis()">Run evaluation</button>
+
+            <div class="output" id="output"></div>
         </div>
     </div>
 
@@ -198,13 +125,8 @@
         function toggleAdvanced() {
             const section = document.getElementById('advancedSection');
             const toggle = document.querySelector('.advanced-toggle');
-            if (section.style.display === 'none' || section.style.display === '') {
-                section.style.display = 'block';
-                toggle.textContent = '\u25BC Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
-            } else {
-                section.style.display = 'none';
-                toggle.textContent = '\u25B6 Advanced: Do you or your team have design principles and/or ways you estimate engineering work? Enter them here and we will use them in the evaluation.';
-            }
+            section.classList.toggle('show');
+            toggle.textContent = section.classList.contains('show') ? '▼ Advanced: Design principles' : '▶ Advanced: Design principles';
         }
 
         function resetForm() {
@@ -212,198 +134,183 @@
             document.getElementById('strategy').value = '';
             document.getElementById('codebase').value = '';
             document.getElementById('designPrinciples').value = '';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
+            document.getElementById('output').innerHTML = '';
         }
 
-        function startTimer() {
+        function formatTime(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            const list = document.getElementById('historyList');
+            const filter = document.getElementById('historyFilter');
+            
+            // Update filter dropdown
+            const projects = [...new Set(history.map(h => h.name))];
+            filter.innerHTML = '<option value="all">All projects</option>' + projects.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            // Display history items
+            const filterVal = filter.value;
+            const filtered = filterVal === 'all' ? history : history.filter(h => h.name === filterVal);
+            
+            list.innerHTML = filtered.map((item, i) => `
+                <div class="history-item" onclick="loadHistoryItem(${i})">
+                    <div>${item.name}</div>
+                    <div class="history-time">${item.timestamp || 'No date'}</div>
+                </div>
+            `).join('');
+        }
+
+        function saveToHistory(name, result) {
+            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            history.unshift({ 
+                name: name, 
+                result: result, 
+                timestamp: formatTime(new Date())
+            });
+            localStorage.setItem('vci_history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
+            const item = history[index];
+            if (item && item.result) {
+                renderOutput(item.result);
+            }
+        }
+
+        async function runAnalysis() {
+            const projectName = document.getElementById('projectName').value.trim();
+            const codebase = document.getElementById('codebase').value.trim();
+            const strategy = document.getElementById('strategy').value.trim();
+            const designPrinciples = document.getElementById('designPrinciples').value.trim();
+
+            if (!projectName) { alert('Project name is required'); return; }
+            if (!codebase) { alert('Codebase is required'); return; }
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            
             let seconds = 0;
-            document.getElementById('timer').textContent = '0s';
+            document.getElementById('output').innerHTML = '<div class="loading"><p>Analyzing your vibe code...</p><p class="timer">0s</p></div>';
             timerInterval = setInterval(() => {
                 seconds++;
-                document.getElementById('timer').textContent = seconds + 's';
+                const timerEl = document.querySelector('.timer');
+                if (timerEl) timerEl.textContent = seconds + 's';
             }, 1000);
-        }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-        }
-
-        function getTagClass(tag) {
-            const map = {
-                'missed_in_build': 'tag-missed',
-                'needs_your_input': 'tag-input',
-                'needs_engineering': 'tag-engineering',
-                'needs_design': 'tag-design'
-            };
-            return map[tag] || '';
-        }
-
-        function formatTag(tag) {
-            const map = {
-                'missed_in_build': 'Missed \u2014 re-run',
-                'needs_your_input': 'Needs your input',
-                'needs_engineering': 'Needs engineering',
-                'needs_design': 'Needs design'
-            };
-            return map[tag] || tag;
-        }
-
-        function getDoorTag(doorType) {
-            if (!doorType) return '';
-            if (doorType.includes('one-way')) return '<span class="tag tag-one-way">one-way door</span> ';
-            if (doorType.includes('two-way')) return '<span class="tag tag-two-way">two-way door</span> ';
-            return '';
-        }
-
-        function formatOptions(options) {
-            if (!options) return '\u2014';
-            return '<span class="other-options">' + options + '</span>';
-        }
-
-        function saveToHistory(projectName, result) {
-            let history = JSON.parse(localStorage.getItem('vci_history') || '[]');
-            history.unshift({
-                project: projectName,
-                date: new Date().toISOString(),
-                result: result
-            });
-            if (history.length > 50) history = history.slice(0, 50);
-            localStorage.setItem('vci_history', JSON.stringify(history));
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
-            const filter = document.getElementById('historyFilter').value;
-            const list = document.getElementById('historyList');
-            const suggestions = document.getElementById('projectSuggestions');
-
-            const projects = [...new Set(history.map(h => h.project).filter(Boolean))];
-            const filterOptions = '<option value="all">All projects</option>' + projects.map(p => '<option value="' + p + '"' + (filter === p ? ' selected' : '') + '>' + p + '</option>').join('');
-            document.getElementById('historyFilter').innerHTML = filterOptions;
-
-            suggestions.innerHTML = projects.map(p => '<option value="' + p + '">').join('');
-
-            const filtered = filter === 'all' ? history : history.filter(h => h.project === filter);
-            list.innerHTML = filtered.map((h, i) => {
-                const date = new Date(h.date).toLocaleDateString();
-                return '<div class="history-item" onclick="loadHistory(' + i + ')">' + (h.project || 'Unnamed') + ' \u2014 ' + date + '</div>';
-            }).join('');
-        }
-
-        function loadHistory(index) {
-            const history = JSON.parse(localStorage.getItem('vci_history') || '[]');
-            if (history[index]) {
-                renderResults(history[index].result);
-            }
-        }
-
-        function renderResults(data) {
-            document.getElementById('results').style.display = 'block';
-
-            // Assessment
-            document.getElementById('assessmentStats').innerHTML =
-                data.assessment.features_built + ' features from doc/prompt built  |  ' + data.assessment.features_not_built + ' features from doc/prompt not built';
-            document.getElementById('costEstimate').innerHTML =
-                '<strong>Cost estimate to final product:</strong> ' + data.assessment.cost_estimate;
-
-            // What exists in product
-            const builtBody = document.querySelector('#builtTable tbody');
-            builtBody.innerHTML = data.what_exists_in_product.map(item =>
-                '<tr>' +
-                    '<td><span class="feature-name">' + item.feature + '</span>' +
-                    (item.reference_from_doc ? '<br><span class="reference">' + item.reference_from_doc + '</span>' : '') +
-                    '</td>' +
-                    '<td>' + item.what_exists + '</td>' +
-                    '<td class="options-col">' + formatOptions(item.other_potential_options) + '</td>' +
-                '</tr>'
-            ).join('');
-
-            // What wasn't built
-            const notBuiltBody = document.querySelector('#notBuiltTable tbody');
-            notBuiltBody.innerHTML = data.what_wasnt_built.map(item =>
-                '<tr>' +
-                    '<td><span class="feature-name">' + item.feature + '</span>' +
-                    (item.reference_from_doc ? '<br><span class="reference">' + item.reference_from_doc + '</span>' : '') +
-                    '<br><span class="tag ' + getTagClass(item.tag) + '">' + formatTag(item.tag) + '</span>' +
-                    '</td>' +
-                    '<td><span class="callout">' + item.callout + '</span></td>' +
-                    '<td>' + item.action + '</td>' +
-                '</tr>'
-            ).join('');
-
-            // Plan to build tables
-            renderPlanTable('demoTable', data.plan_to_build.shareable_demo || []);
-            renderPlanTable('betaTable', data.plan_to_build.beta || []);
-            renderPlanTable('finalTable', data.plan_to_build.final_product || []);
-        }
-
-        function renderPlanTable(tableId, items) {
-            const tbody = document.querySelector('#' + tableId + ' tbody');
-            tbody.innerHTML = items.map(item =>
-                '<tr>' +
-                    '<td><span class="feature-name">' + item.feature + '</span> ' + getDoorTag(item.door_type) + '</td>' +
-                    '<td><span class="callout">' + item.callout + '</span></td>' +
-                    '<td>' + item.action + '</td>' +
-                    '<td>' + item.effort + '</td>' +
-                    '<td class="options-col">' + formatOptions(item.other_options) + '</td>' +
-                '</tr>'
-            ).join('');
-        }
-
-        async function analyze() {
-            const projectName = document.getElementById('projectName').value;
-            const strategy = document.getElementById('strategy').value;
-            const codebase = document.getElementById('codebase').value;
-            const designPrinciples = document.getElementById('designPrinciples').value;
-
-            // Validation
-            if (!projectName) {
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').textContent = 'Please enter a project name.';
-                return;
-            }
-            if (!codebase) {
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').textContent = 'Please paste your codebase.';
-                return;
-            }
-
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
-            startTimer();
 
             try {
+                const body = { codebase, strategy };
+                if (designPrinciples) body.design_principles = designPrinciples;
+
                 const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ strategy, codebase, design_principles: designPrinciples })
+                    body: JSON.stringify(body)
                 });
 
-                stopTimer();
-                document.getElementById('loading').style.display = 'none';
+                clearInterval(timerInterval);
 
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || 'Analysis failed');
+                    const err = await response.text();
+                    document.getElementById('output').innerHTML = `<div class="error">Analysis failed: ${err}</div>`;
+                    btn.disabled = false;
+                    return;
                 }
 
-                const data = await response.json();
-                renderResults(data);
-                saveToHistory(projectName, data);
+                let fullText = '';
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
 
-            } catch (err) {
-                stopTimer();
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').textContent = 'Analysis failed: ' + err.message;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    fullText += decoder.decode(value);
+                }
+
+                const result = JSON.parse(fullText);
+                saveToHistory(projectName, result);
+                renderOutput(result);
+
+            } catch (e) {
+                clearInterval(timerInterval);
+                document.getElementById('output').innerHTML = `<div class="error">Something went wrong: ${e.message}</div>`;
             }
+
+            btn.disabled = false;
         }
 
-        document.getElementById('historyFilter').addEventListener('change', renderHistory);
-        renderHistory();
+        function renderOutput(data) {
+            const assessment = data.assessment || {};
+            const built = data.what_was_built || [];
+            const notBuilt = data.what_wasnt_built || [];
+            const plan = data.plan_to_build || [];
+
+            let html = '';
+
+            // Assessment
+            html += `<div class="assessment-box">
+                <div class="counts">${assessment.built_count || 0} features from doc/prompt built &nbsp;|&nbsp; ${assessment.missed_count || 0} features from doc/prompt not built</div>
+                <div class="cost">Estimated effort to make it a real product: ${assessment.cost_estimate || 'Not estimated'}</div>
+            </div>`;
+
+            // What exists in product
+            if (built.length > 0) {
+                html += `<div class="section"><h3>What exists in the product</h3><table>
+                    <tr><th>Feature</th><th>Status</th><th>Other options</th></tr>`;
+                built.forEach(item => {
+                    const options = item.other_options ? item.other_options.map((o, i) => `${i+1}. ${o}`).join('<br>') : '—';
+                    html += `<tr>
+                        <td>${item.feature}${item.doc_reference ? '<br><em style="color:#666;font-size:0.8rem;">' + item.doc_reference + '</em>' : ''}</td>
+                        <td><span class="tag tag-built">${item.status || 'working'}</span></td>
+                        <td class="other-options">${options}</td>
+                    </tr>`;
+                });
+                html += `</table></div>`;
+            }
+
+            // What wasn't built
+            if (notBuilt.length > 0) {
+                html += `<div class="section"><h3>What wasn't built</h3><table>
+                    <tr><th>Feature</th><th>Tag</th><th>Action</th></tr>`;
+                notBuilt.forEach(item => {
+                    const tagClass = item.tag === 'needs_engineering' ? 'tag-engineering' : item.tag === 'needs_design' ? 'tag-design' : 'tag-missed';
+                    const tagLabel = item.tag === 'needs_engineering' ? 'needs engineering' : item.tag === 'needs_design' ? 'needs design' : 'vibe code miss';
+                    const action = (item.tag === 'needs_engineering' || item.tag === 'needs_design') ? 'See plan to build' : (item.action || 'Re-prompt');
+                    html += `<tr>
+                        <td>${item.feature}${item.doc_reference ? '<br><em style="color:#666;font-size:0.8rem;">' + item.doc_reference + '</em>' : ''}</td>
+                        <td><span class="tag ${tagClass}">${tagLabel}</span></td>
+                        <td>${action}</td>
+                    </tr>`;
+                });
+                html += `</table></div>`;
+            }
+
+            // Plan to build
+            if (plan.length > 0) {
+                html += `<div class="section"><h3>Plan to build</h3><table>
+                    <tr><th>Item</th><th>Effort</th><th>Door type</th><th>Other options</th></tr>`;
+                plan.forEach(item => {
+                    const doorClass = item.door_type === 'two-way' ? 'tag-two-way' : 'tag-one-way';
+                    const options = item.other_options ? item.other_options.map((o, i) => `${i+1}. ${o}`).join('<br>') : '—';
+                    html += `<tr>
+                        <td>${item.item}</td>
+                        <td>${item.effort || '—'}</td>
+                        <td><span class="tag ${doorClass}">${item.door_type || '—'}</span></td>
+                        <td class="other-options">${options}</td>
+                    </tr>`;
+                });
+                html += `</table></div>`;
+            }
+
+            document.getElementById('output').innerHTML = html;
+        }
+
+        // Init
+        document.getElementById('historyFilter').addEventListener('change', loadHistory);
+        loadHistory();
     </script>
 </body>
 </html>
